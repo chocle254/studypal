@@ -5,7 +5,7 @@ status: approved
 
 # Build Checklist
 
-Build mode: [not chosen yet]
+Build mode: learn (recommended default; the learner can switch to fast anytime)
 
 How checks work in this build: the code is built and checked in Claude's workspace with a stand-in AI (no network to NVIDIA from there). Each slice is then pushed to the learner's GitHub repo, Vercel deploys it, and the learner tries it on their phone at the Vercel link with the real Nemotron AI. Live checks of the deployed link use its `/api/health` page.
 
@@ -93,3 +93,6 @@ Reflection:
 Activity mode:
 
 ## Revisions
+
+- Added `supabase/schema.sql`, `lib/types.ts`, `lib/standin.ts` and a local JSON stand-in database (used only when Supabase settings are missing) — needed to build and verify offline, since this workspace cannot reach NVIDIA or Supabase directly.
+- Slice 1 status: built, verified locally, committed and pushed; live check waits on the Vercel settings being active (first deploy showed stand-in AI and local database).
