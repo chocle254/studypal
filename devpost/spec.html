@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Study Pal: Technical Spec</title>
+<style>
+  :root{--bg:#fbfaf7;--fg:#1d1d1f;--mut:#5f6368;--card:#fff;--line:#e4e1d8;--acc:#2f6f5e;--acc2:#c8602b;--soft:#e6f1ed}
+  @media (prefers-color-scheme:dark){:root{--bg:#141614;--fg:#ececea;--mut:#a3a8a5;--card:#1c1f1d;--line:#2d322f;--acc:#6fcbb2;--acc2:#f08a56;--soft:#1e2e29}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  h2{font-size:1.1rem;margin:28px 0 8px;color:var(--acc)}
+  .tag,.why{color:var(--mut);font-size:.93rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:8px 0}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+  summary{cursor:pointer;font-weight:600}
+  ul{margin:8px 0 0;padding-left:20px} li{margin:5px 0}
+  code{background:var(--soft);padding:1px 5px;border-radius:5px;font-size:.88rem}
+  pre{background:var(--soft);padding:12px;border-radius:10px;overflow:auto;font-size:.82rem;line-height:1.45}
+  .step{display:none}.step.on{display:block}
+  .ctl{display:flex;gap:8px;align-items:center;margin-top:10px}
+  button{font:inherit;background:var(--acc);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  .count{color:var(--mut);font-size:.9rem}
+  svg{width:100%;height:auto;display:block}
+  svg text{fill:var(--fg);font:12px system-ui,sans-serif}
+  .box{fill:var(--soft);stroke:var(--acc);stroke-width:1.4}
+  .hot{fill:var(--card);stroke:var(--acc2);stroke-width:2.2}
+  .arrow{stroke:var(--mut);stroke-width:1.5;fill:none}
+  .arrowhead{fill:var(--mut)}
+  .hl{stroke:var(--acc2);stroke-width:3}
+</style>
+</head>
+<body>
+<main>
+  <h1>AI Study Pal <span style="font-weight:400;color:var(--mut)">(working title)</span></h1>
+  <p class="tag">Technical spec. Status: approved. Markdown (<code>spec.md</code>) is the canonical version.</p>
+
+  <h2>How it works, in plain language</h2>
+  <div class="card">A website that opens on a phone like an app. <b>Vercel</b> serves the screens and runs small server functions that hold the AI key. <b>Supabase</b> is a spreadsheet in the cloud that remembers courses, units, questions, lessons and scores. <b>Nemotron</b> is the AI that reads the unit, writes questions, marks typed answers and writes lessons. No sign-in: each phone makes a random secret ID. The PDF is read on the phone, and only its text goes to Supabase.</div>
+
+  <h2>The pieces</h2>
+  <div class="card">
+    <svg viewBox="0 0 680 270" role="img" aria-label="Architecture: phone browser, Vercel functions, Supabase, Nemotron">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect class="box" x="10" y="90" width="170" height="90" rx="10"/><text x="95" y="118" text-anchor="middle" style="font-weight:700">Student's phone</text><text x="95" y="138" text-anchor="middle">screens, PDF picker</text><text x="95" y="156" text-anchor="middle">reads PDF text, secret ID</text>
+      <rect class="hot" x="255" y="90" width="170" height="90" rx="10"/><text x="340" y="118" text-anchor="middle" style="font-weight:700">Vercel</text><text x="340" y="138" text-anchor="middle">Next.js screens +</text><text x="340" y="156" text-anchor="middle">server functions (AI key)</text>
+      <rect class="box" x="500" y="10" width="170" height="80" rx="10"/><text x="585" y="40" text-anchor="middle" style="font-weight:700">Supabase</text><text x="585" y="60" text-anchor="middle">units, topics, scores</text>
+      <rect class="box" x="500" y="180" width="170" height="80" rx="10"/><text x="585" y="210" text-anchor="middle" style="font-weight:700">NVIDIA Nemotron</text><text x="585" y="230" text-anchor="middle">questions, marking, lessons</text>
+      <path class="arrow" d="M180 135H252" marker-end="url(#ah)"/>
+      <path class="arrow" d="M425 112L497 62" marker-end="url(#ah)"/>
+      <path class="arrow" d="M425 158L497 208" marker-end="url(#ah)"/>
+    </svg>
+    <p class="why">Only text travels from the phone. The AI key and the database key stay on Vercel.</p>
+  </div>
+
+  <h2>One student's journey through the pieces</h2>
+  <div class="card" id="stepper">
+    <div class="step on"><b>1. Open the link</b><p>The phone makes or reads its secret ID and asks Vercel for its units. Nothing yet: the empty screen with a plus button.</p><p class="why">PRD: Home and navigation</p></div>
+    <div class="step"><b>2. Add a unit</b><p>The phone reads the PDF text itself. The text goes to <code>POST /api/units</code>.</p><p class="why">PRD: Adding a course and unit</p></div>
+    <div class="step"><b>3. The AI prepares the unit</b><p>Nemotron splits the text into topics and writes baseline and final questions on the same key parts. Saved to Supabase.</p><p class="why">PRD: Baseline mock test</p></div>
+    <div class="step"><b>4. Baseline test</b><p>Five questions per topic. <code>POST /api/mark</code> marks the five answers in one AI call. The score is saved as an attempt.</p><p class="why">PRD: Baseline mock test</p></div>
+    <div class="step"><b>5. Results and style</b><p>Strong and weak topics come from saved scores. The student picks a style and where to start.</p><p class="why">PRD: Teaching styles and starting point</p></div>
+    <div class="step"><b>6. Lesson</b><p><code>POST /api/lesson</code> returns steps with a drawing each, saved so it's never written twice.</p><p class="why">PRD: Lesson</p></div>
+    <div class="step"><b>7. Topic check</b><p>The same marking call, saved as an attempt.</p><p class="why">PRD: Topic check</p></div>
+    <div class="step"><b>8. Final test and before-and-after</b><p>Final questions (same parts, new wording) are marked. The screen compares baseline and final scores.</p><p class="why">PRD: Final test and before-and-after score</p></div>
+    <div class="ctl"><button id="prev">Back</button><button id="next">Next</button><span class="count" id="count"></span></div>
+  </div>
+
+  <h2>Stack</h2>
+  <details open><summary>What we're using</summary><ul>
+    <li><b>Next.js + TypeScript + Tailwind:</b> screens and server functions in one project</li>
+    <li><b>Supabase:</b> the cloud database you chose</li>
+    <li><b>Nemotron</b> via NVIDIA's OpenAI-compatible endpoint: the AI you chose</li>
+    <li><b>pdf.js:</b> reads PDF text on the phone</li>
+    <li><b>Vercel:</b> hosting you chose</li></ul>
+    <p class="why">Check early: exact model name, free limits (reported ~1,000 credits, 40 requests/min), pdf.js on a phone, quality of AI-drawn diagrams.</p></details>
+
+  <h2>Components, tied to the PRD</h2>
+  <details><summary>Home and Navbar, Pomodoro</summary><ul>
+    <li>Burger (courses), pomodoro and avatar; empty state or two-column cards</li>
+    <li>Files: <code>app/page.tsx</code>, <code>components/Navbar.tsx</code>, <code>UnitCard.tsx</code>, <code>Pomodoro.tsx</code></li></ul></details>
+  <details><summary>Add course and unit, unit analysis</summary><ul>
+    <li>Phone reads the PDF; function asks the AI for topics and questions</li>
+    <li>Files: <code>app/add/page.tsx</code>, <code>lib/pdf.ts</code>, <code>app/api/units/route.ts</code></li></ul></details>
+  <details><summary>Tests, results, lessons, comparison</summary><ul>
+    <li>One-topic-at-a-time test view with a progress box</li>
+    <li>One marking call per topic; lessons cached by topic and style</li>
+    <li>Files: <code>TestView.tsx</code>, <code>Results.tsx</code>, <code>LessonView.tsx</code>, <code>DiagramSvg.tsx</code>, <code>ScoreCompare.tsx</code>, <code>api/mark</code>, <code>api/lesson</code></li></ul></details>
+
+  <h2>Data model</h2>
+  <details><summary>Four tables</summary><ul>
+    <li><code>students</code>: the secret ID</li>
+    <li><code>courses</code>: name, level</li>
+    <li><code>units</code>: material text, style, current topic, and <b>topics</b> (questions and lessons inside)</li>
+    <li><code>attempts</code>: baseline, check or final score per topic</li></ul>
+    <p class="why">Clearing the browser's data loses the ID. Accepted for the hackathon; accounts fix it later.</p></details>
+
+  <h2>File structure</h2>
+  <details><summary>Annotated tree</summary>
+<pre>studypal/
+├── app/
+│   ├── layout.tsx, globals.css
+│   ├── page.tsx            Home
+│   ├── add/page.tsx        Add course + unit
+│   ├── unit/[id]/page.tsx  Unit flow
+│   ├── profile/page.tsx    Overall performance
+│   └── api/  home · units · mark · lesson
+├── components/  Navbar, UnitCard, Pomodoro, TestView,
+│                TopicProgress, Results, LessonView,
+│                DiagramSvg, ScoreCompare
+├── lib/  nvidia · prompts · supabase · student · pdf
+├── devpost/    scope, PRD, spec
+├── .env.example · package.json · README.md</pre></details>
+
+  <h2>If it breaks</h2>
+  <details><summary>Three likely failures</summary><ul>
+    <li><b>PDF has no readable text:</b> plain message; paste text instead</li>
+    <li><b>AI slow or out of credits:</b> one retry, then a friendly "try again in a minute"; saved work stays</li>
+    <li><b>Messy AI output or broken drawing:</b> one retry; otherwise the step shows as a text card</li></ul></details>
+
+  <h2>Simplified on purpose</h2>
+  <details><summary>What we kept small, and why</summary><ul>
+    <li>Random device ID, not accounts</li>
+    <li>Extracted text, not stored PDFs or a phone folder</li>
+    <li>AI-drawn SVG diagrams, not generated images</li>
+    <li>Four tables, one demo unit of about three topics</li></ul></details>
+
+  <h2>Decisions and open issues</h2>
+  <details><summary>Open</summary><ul>
+    <li>Diagram quality (fall back to text cards if they don't help)</li>
+    <li>Exact Nemotron model name and limits</li>
+    <li>Pomodoro 25/5 is an agent assumption</li>
+    <li>Final project name</li></ul></details>
+</main>
+<script>
+(function(){
+  var steps=document.querySelectorAll('#stepper .step'),i=0;
+  var prev=document.getElementById('prev'),next=document.getElementById('next'),count=document.getElementById('count');
+  function show(){for(var k=0;k<steps.length;k++)steps[k].classList.toggle('on',k===i);
+    prev.disabled=i===0;next.disabled=i===steps.length-1;count.textContent=(i+1)+' / '+steps.length;}
+  prev.onclick=function(){if(i>0){i--;show();}};
+  next.onclick=function(){if(i<steps.length-1){i++;show();}};
+  show();
+})();
+</script>
+</body>
+</html>

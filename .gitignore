@@ -1,0 +1,25 @@
+# Private learner context (stays out of commits)
+/devpost/learner-profile.md
+
+# Secrets: never commit keys
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# Local stand-in database used only when Supabase isn't configured
+/.data/
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
+/coverage

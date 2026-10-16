@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Study Pal: Product Requirements</title>
+<style>
+  :root{--bg:#fbfaf7;--fg:#1d1d1f;--mut:#5f6368;--card:#fff;--line:#e4e1d8;--acc:#2f6f5e;--acc2:#c8602b;--soft:#e6f1ed}
+  @media (prefers-color-scheme:dark){:root{--bg:#141614;--fg:#ececea;--mut:#a3a8a5;--card:#1c1f1d;--line:#2d322f;--acc:#6fcbb2;--acc2:#f08a56;--soft:#1e2e29}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  h2{font-size:1.1rem;margin:28px 0 8px;color:var(--acc)}
+  .tag,.why{color:var(--mut);font-size:.93rem}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:8px 0}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+  summary{cursor:pointer;font-weight:600}
+  ul{margin:8px 0 0;padding-left:20px} li{margin:5px 0}
+  .step{display:none}
+  .step.on{display:block}
+  .ctl{display:flex;gap:8px;align-items:center;margin-top:10px}
+  button{font:inherit;background:var(--acc);color:var(--bg);border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+  button:disabled{opacity:.4;cursor:default}
+  .count{color:var(--mut);font-size:.9rem}
+  svg{width:100%;height:auto;display:block}
+  svg text{fill:var(--fg);font:12px system-ui,sans-serif}
+  .box{fill:var(--soft);stroke:var(--acc);stroke-width:1.4}
+  .hot{fill:var(--card);stroke:var(--acc2);stroke-width:2.4}
+  .arrow{stroke:var(--mut);stroke-width:1.5;fill:none}
+  .arrowhead{fill:var(--mut)}
+  .phone{border:2px solid var(--line);border-radius:18px;padding:10px;background:var(--bg)}
+  .nav{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:6px;font-size:.9rem}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  .ucard{background:var(--soft);border-radius:10px;height:70px;display:flex;align-items:flex-end;padding:6px;font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>AI Study Pal <span style="font-weight:400;color:var(--mut)">(working title)</span></h1>
+  <p class="tag">Product requirements. Status: approved. Markdown (<code>prd.md</code>) is the canonical version.</p>
+
+  <h2>Scope said it. Now we know exactly what it means.</h2>
+  <div class="card">Scope said "a baseline mock test, teach the weak topics, a final test." Now it's five questions per topic with a progress box, a per-topic check after every lesson, and a final test on the same parts with different questions.</div>
+
+  <h2>The journey</h2>
+  <div class="card">
+    <svg viewBox="0 0 680 360" role="img" aria-label="Journey from empty home to before-and-after score, with topic loop">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect class="box" x="8" y="14" width="150" height="54" rx="9"/><text x="83" y="38" text-anchor="middle">Empty home</text><text x="83" y="55" text-anchor="middle">+ button</text>
+      <rect class="box" x="265" y="14" width="150" height="54" rx="9"/><text x="340" y="38" text-anchor="middle">Add course, level,</text><text x="340" y="55" text-anchor="middle">unit, material</text>
+      <rect class="box" x="522" y="14" width="150" height="54" rx="9"/><text x="597" y="38" text-anchor="middle">Baseline test</text><text x="597" y="55" text-anchor="middle">5 questions / topic</text>
+      <rect class="box" x="522" y="120" width="150" height="54" rx="9"/><text x="597" y="144" text-anchor="middle">Results</text><text x="597" y="161" text-anchor="middle">strong / weak</text>
+      <rect class="box" x="265" y="120" width="150" height="54" rx="9"/><text x="340" y="144" text-anchor="middle">Pick style</text><text x="340" y="161" text-anchor="middle">and starting topic</text>
+      <rect class="box" x="8" y="120" width="150" height="54" rx="9"/><text x="83" y="144" text-anchor="middle">Lesson</text><text x="83" y="161" text-anchor="middle">simple, images, analogies</text>
+      <rect class="box" x="8" y="226" width="150" height="54" rx="9"/><text x="83" y="250" text-anchor="middle">Topic check</text><text x="83" y="267" text-anchor="middle">next topic: back to lesson</text>
+      <rect class="box" x="265" y="226" width="150" height="54" rx="9"/><text x="340" y="250" text-anchor="middle">Final test</text><text x="340" y="267" text-anchor="middle">same parts, new questions</text>
+      <rect class="hot" x="140" y="300" width="400" height="48" rx="9"/><text x="340" y="329" text-anchor="middle" style="font-weight:700">Before vs after score</text>
+      <path class="arrow" d="M158 41H262" marker-end="url(#ah)"/><path class="arrow" d="M415 41H519" marker-end="url(#ah)"/>
+      <path class="arrow" d="M597 68V117" marker-end="url(#ah)"/><path class="arrow" d="M522 147H418" marker-end="url(#ah)"/>
+      <path class="arrow" d="M265 147H161" marker-end="url(#ah)"/><path class="arrow" d="M83 174V223" marker-end="url(#ah)"/>
+      <path class="arrow" d="M158 253H262" marker-end="url(#ah)"/><path class="arrow" d="M340 280V297" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+
+  <h2>Step through the screens</h2>
+  <div class="card" id="stepper">
+    <div class="step on"><b>1. Home, empty</b>
+      <div class="phone"><div class="nav"><span>☰</span><span>⏱ &nbsp; (avatar)</span></div><p style="text-align:center;margin:26px 0 6px;font-size:2rem">＋</p><p class="why" style="text-align:center">no units added yet</p></div>
+      <ul><li>Plus button and "no units added yet".</li><li>Burger far left lists courses; pomodoro and avatar far right.</li></ul></div>
+    <div class="step"><b>2. Home, with units</b>
+      <div class="phone"><div class="nav"><span>☰</span><span>⏱ &nbsp; (avatar)</span></div><div class="grid2"><div class="ucard">Foundations</div><div class="ucard">Cell biology</div><div class="ucard">Unit 3</div><div class="ucard">Unit 4</div></div></div>
+      <ul><li>Two columns of cards, each with an image and the unit name.</li></ul></div>
+    <div class="step"><b>3. Add course and unit</b>
+      <ul><li>Course and level, then the unit, its study material and the topic they're at.</li><li>Uploads are organized under the course, then the unit.</li><li>The AI reads from the first topic to the current one.</li></ul></div>
+    <div class="step"><b>4. Baseline test</b>
+      <ul><li>One topic at a time, five questions; mostly typed answers, a few options.</li><li>A box shows the other topics, unmarked until they're done.</li><li>The five questions cover different parts of the topic.</li></ul></div>
+    <div class="step"><b>5. Results, style and topic choice</b>
+      <ul><li>Strong and weak topics, and overall understanding.</li><li>Choose 5-year-old, gossip or nerd; start from topic one or pick custom topics.</li></ul></div>
+    <div class="step"><b>6. Lesson</b>
+      <ul><li>Step by step, easy English, many images, real-life examples.</li><li>Example: a white blood cell is a dog protecting a house; its membrane opens like a blanket and closes around the virus.</li><li>Strong topic: a nudge, plus an option for a quick check the AI brushes through.</li></ul></div>
+    <div class="step"><b>7. Topic check</b>
+      <ul><li>A short check after each lesson, showing how the student did.</li></ul></div>
+    <div class="step"><b>8. Final test and before-and-after</b>
+      <ul><li>Same parts of each topic as the baseline, new questions, different structure.</li><li>The result screen shows baseline and final scores side by side.</li></ul></div>
+    <div class="ctl"><button id="prev">Back</button><button id="next">Next</button><span class="count" id="count"></span></div>
+  </div>
+
+  <h2>Acceptance criteria</h2>
+  <details open><summary>Home and navigation</summary><ul>
+    <li>Empty state shows a plus button and "no units added yet".</li>
+    <li>Units show in two columns, each card with an image and name.</li>
+    <li>Burger opens a dropdown of added courses.</li>
+    <li>Pomodoro button starts a visible study-block timer.</li>
+    <li>Avatar opens profile details and overall performance across units.</li></ul></details>
+  <details><summary>Adding a unit</summary><ul>
+    <li>Plus asks for course and level, then moves to the add-unit screen.</li>
+    <li>The add-unit screen takes the unit, material and current topic.</li></ul></details>
+  <details><summary>Tests</summary><ul>
+    <li>Baseline: one topic, five questions, remaining topics shown unmarked.</li>
+    <li>Results show strong and weak topics.</li>
+    <li>Final test covers the same parts with different questions and structure.</li>
+    <li>Before and after scores show side by side.</li></ul></details>
+  <details><summary>Lessons</summary><ul>
+    <li>Step by step, easy English, many images, real-life analogies.</li>
+    <li>The chosen style changes the explanation.</li>
+    <li>A strong topic shows a nudge and a quick-check option.</li></ul></details>
+
+  <h2>States</h2>
+  <details><summary>First use, all-strong, between visits, sign-in</summary><ul>
+    <li><b>First use:</b> empty home with plus button.</li>
+    <li><b>All topics strong:</b> a nudge and a quick-check option.</li>
+    <li><b>Between visits:</b> units and scores are still there; no sign-in. Storage is a <code>4-spec</code> question.</li>
+    <li><b>Sign-in:</b> not in the hackathon version; planned later.</li></ul></details>
+
+  <h2>Deferred, and open questions</h2>
+  <details><summary>Deferred from the POC</summary><ul>
+    <li>Badges, sign-in and accounts, multi-device sync, PC version</li>
+    <li>Audio, video and image uploads, unlockable styles</li>
+    <li>Learning-pattern detection, exam mode, diagram-based tests</li></ul></details>
+  <details><summary>Open questions</summary><ul>
+    <li>Where lesson images come from (before <code>4-spec</code>)</li>
+    <li>What happens when an uploaded file can't be read (before <code>5-build</code>)</li>
+    <li>Feedback after each baseline answer or only at the end (assumed: end)</li>
+    <li>Pomodoro block length; final project name</li></ul></details>
+</main>
+<script>
+(function(){
+  var steps=document.querySelectorAll('#stepper .step'),i=0;
+  var prev=document.getElementById('prev'),next=document.getElementById('next'),count=document.getElementById('count');
+  function show(){for(var k=0;k<steps.length;k++)steps[k].classList.toggle('on',k===i);
+    prev.disabled=i===0;next.disabled=i===steps.length-1;count.textContent=(i+1)+' / '+steps.length;}
+  prev.onclick=function(){if(i>0){i--;show();}};
+  next.onclick=function(){if(i<steps.length-1){i++;show();}};
+  show();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Study Pal: Scope</title>
+<style>
+  :root{--bg:#fbfaf7;--fg:#1d1d1f;--mut:#5f6368;--card:#fff;--line:#e4e1d8;--acc:#2f6f5e;--acc2:#c8602b;--soft:#e6f1ed}
+  @media (prefers-color-scheme:dark){:root{--bg:#141614;--fg:#ececea;--mut:#a3a8a5;--card:#1c1f1d;--line:#2d322f;--acc:#6fcbb2;--acc2:#f08a56;--soft:#1e2e29}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:24px 16px 56px}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  .tag{color:var(--mut);margin:0 0 20px}
+  h2{font-size:1.1rem;margin:28px 0 8px;color:var(--acc)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:8px 0}
+  .kernel{border-left:4px solid var(--acc2)}
+  .grid{display:grid;gap:8px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}
+  summary{cursor:pointer;font-weight:600}
+  ul{margin:8px 0 0;padding-left:20px}
+  li{margin:4px 0}
+  .why{color:var(--mut);font-size:.92rem}
+  svg{width:100%;height:auto;display:block}
+  svg text{fill:var(--fg);font:13px system-ui,sans-serif}
+  .box{fill:var(--soft);stroke:var(--acc);stroke-width:1.5}
+  .hot{fill:var(--card);stroke:var(--acc2);stroke-width:2.5}
+  .arrow{stroke:var(--mut);stroke-width:1.6;fill:none}
+  .arrowhead{fill:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+  <h1>AI Study Pal <span style="font-weight:400;color:var(--mut)">(working title)</span></h1>
+  <p class="tag">Tests what you know, teaches only what you're missing, and proves it worked with a before-and-after score.</p>
+  <p class="why">Status: approved. Markdown (<code>scope.md</code>) is the canonical version.</p>
+
+  <h2>The core loop</h2>
+  <div class="card">
+    <svg viewBox="0 0 680 330" role="img" aria-label="Core loop: add a unit, baseline test, results, pick a style, teach weak topics, final test, before and after score">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0L10 5L0 10z"/></marker></defs>
+      <rect class="box" x="10" y="20" width="150" height="62" rx="10"/><text x="85" y="46" text-anchor="middle">1. Add a unit</text><text x="85" y="64" text-anchor="middle">+ study material</text>
+      <rect class="box" x="265" y="20" width="150" height="62" rx="10"/><text x="340" y="46" text-anchor="middle">2. Baseline mock</text><text x="340" y="64" text-anchor="middle">test, all topics</text>
+      <rect class="box" x="520" y="20" width="150" height="62" rx="10"/><text x="595" y="46" text-anchor="middle">3. Results</text><text x="595" y="64" text-anchor="middle">strong / weak topics</text>
+      <rect class="box" x="520" y="130" width="150" height="62" rx="10"/><text x="595" y="156" text-anchor="middle">4. Pick a style</text><text x="595" y="174" text-anchor="middle">5-year-old, gossip, nerd</text>
+      <rect class="box" x="265" y="130" width="150" height="62" rx="10"/><text x="340" y="156" text-anchor="middle">5. Teach the</text><text x="340" y="174" text-anchor="middle">weak topics only</text>
+      <rect class="box" x="10" y="130" width="150" height="62" rx="10"/><text x="85" y="156" text-anchor="middle">6. Final test</text><text x="85" y="174" text-anchor="middle">same topics</text>
+      <rect class="hot" x="150" y="245" width="380" height="62" rx="10"/><text x="340" y="272" text-anchor="middle" style="font-weight:700">7. Before vs after score</text><text x="340" y="291" text-anchor="middle">the "oh, that's cool" moment</text>
+      <path class="arrow" d="M160 51H262" marker-end="url(#ah)"/>
+      <path class="arrow" d="M415 51H517" marker-end="url(#ah)"/>
+      <path class="arrow" d="M595 82V127" marker-end="url(#ah)"/>
+      <path class="arrow" d="M520 161H418" marker-end="url(#ah)"/>
+      <path class="arrow" d="M265 161H163" marker-end="url(#ah)"/>
+      <path class="arrow" d="M85 192V220Q85 276 147 276" marker-end="url(#ah)"/>
+    </svg>
+  </div>
+
+  <h2>The unique kernel</h2>
+  <div class="card kernel">It tests first, then teaches only the gaps. A student who knows the parts of a foundation but not the materials skips the first and learns the second, in the style they chose, with simple visuals. The final test against the baseline proves the teaching worked.</div>
+
+  <h2>Who it's for</h2>
+  <div class="card">A student stuck on a unit topic: a building construction student on foundations, a medical student on how cells work. High school, college, university, or anyone with the passion to understand something.<br><br><span class="why">Today: they ask an AI for a well-labelled image, copy and paste it, and move on without understanding what each part does or which materials it uses.</span></div>
+
+  <h2>What "working" looks like</h2>
+  <div class="card">A new user sees an empty screen with an add button. They enter a course and level, add a unit with its material and the topic they're at, and the AI reads it. They take a baseline mock test, see strong and weak topics, pick a style, get taught the weak topics, and take a final test that shows their before-and-after score.</div>
+
+  <h2>The POC boundary, and what waits</h2>
+  <details open>
+    <summary>Now: in the proof of concept</summary>
+    <ul>
+      <li>One unit with its study text or PDF</li>
+      <li>Baseline mock test across the topics, with a strong/weak result</li>
+      <li>Teaching style choice: 5-year-old, gossip, nerd</li>
+      <li>The AI teaches the weak topics in that style</li>
+      <li>Final test with the before-and-after score</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Later: worth doing, with reasons</summary>
+    <ul>
+      <li><b>Badges and commitment tracking:</b> needs data across sessions, not needed to prove the kernel</li>
+      <li><b>Multiple courses and units:</b> the proof works with one</li>
+      <li><b>Audio, video and image uploads:</b> text/PDF is enough for the proof</li>
+      <li><b>Blurred styles unlocked by performance:</b> a reward layer on top of the core</li>
+      <li><b>Learning-pattern detection:</b> needs history across many sessions</li>
+      <li><b>Exam mode:</b> builds on the same tests</li>
+      <li><b>"What's missing from this diagram" test:</b> needs generated or classified images, bigger than the proof</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Explicitly cut</summary>
+    <p>Nothing is permanently cut. Everything deferred is listed under Later, each with its reason.</p>
+  </details>
+
+  <h2>Feel</h2>
+  <div class="card">Fun, friendly and playful. Teaching styles such as "explain like I'm 5", gossip and nerd. Convincing, fun nudges not to cheat.</div>
+</main>
+</body>
+</html>
