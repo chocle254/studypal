@@ -47,6 +47,9 @@ async function readLocal(): Promise<Tables> {
 }
 
 async function writeLocal(t: Tables) {
+  if (process.env.VERCEL) {
+    throw new Error("Database settings are missing on Vercel (SUPABASE_URL and SUPABASE_SERVICE_KEY).");
+  }
   await fs.mkdir(path.dirname(FILE), { recursive: true });
   await fs.writeFile(FILE, JSON.stringify(t, null, 2));
 }

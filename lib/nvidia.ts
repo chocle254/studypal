@@ -16,6 +16,8 @@ export interface AskOptions {
   user: string;
   maxTokens?: number;
   temperature?: number;
+  timeoutMs?: number; // per attempt; default 55s
+  retries?: number; // extra attempts after the first; default 1
 }
 
 export class AIError extends Error {
@@ -44,7 +46,8 @@ export async function ask(opts: AskOptions): Promise<string> {
   if (aiMode() === "stand-in") return standIn(opts);
 
   let lastErr: unknown;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  const attempts = 1 + (opts.retries ?? 1);
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       const res = await fetch(`${BASE}/chat/completions`, {
         method: "POST",
@@ -61,7 +64,7 @@ export async function ask(opts: AskOptions): Promise<string> {
           temperature: opts.temperature ?? 0.4,
           max_tokens: opts.maxTokens ?? 2048,
         }),
-        signal: AbortSignal.timeout(55_000),
+        signal: AbortSignal.timeout(opts.timeoutMs ?? 55_000),
       });
       if (res.status === 429) throw new AIError("Study Pal is busy, try again in a minute.", "busy");
       if (res.status === 401 || res.status === 403 || res.status === 404) {
@@ -74,7 +77,11 @@ export async function ask(opts: AskOptions): Promise<string> {
       if (!text) throw new AIError("The AI sent an empty answer.", "bad_output");
       return text;
     } catch (e) {
-      lastErr = e;
+      lastErr =
+        e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError")
+          ? new AIError("The AI took too long to answer.", "busy")
+          : e;
+      console.error(`AI call failed (task ${opts.task}, attempt ${attempt + 1}):`, String(lastErr));
       if (e instanceof AIError && e.kind === "config") break; // retrying won't fix a bad key or model
     }
   }
@@ -113,4 +120,16 @@ export async function askJson<T>(opts: AskOptions, valid: (v: T) => boolean): Pr
     }
   }
   throw new AIError("The AI's answer wasn't in the right shape. Please try again.", "bad_output");
+}
+
+// List the model names this key can use (for the health page).
+export async function listModels(): Promise<string[]> {
+  if (aiMode() === "stand-in") return [];
+  const res = await fetch(`${BASE}/models`, {
+    headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}` },
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`models list ${res.status}`);
+  const data = await res.json();
+  return (data?.data ?? []).map((m: { id: string }) => m.id);
 }
