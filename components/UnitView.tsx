@@ -6,19 +6,41 @@ import { useEffect, useState } from "react";
 import { getStudentId } from "@/lib/student";
 import type { PublicUnit } from "@/lib/types";
 import { Artwork } from "@/components/UnitCard";
+import Preparing from "@/components/Preparing";
+import { prepareTopics } from "@/lib/prepare";
 
 // The unit screen. For now it shows the topics the AI found; the test flow arrives in slice 3.
 export default function UnitView() {
   const { id } = useParams<{ id: string }>();
   const [unit, setUnit] = useState<PublicUnit | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const [prepError, setPrepError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/units/${id}?student=${getStudentId()}`)
+  function load() {
+    return fetch(`/api/units/${id}?student=${getStudentId()}`)
       .then((r) => r.json())
       .then((d) => (d.unit ? setUnit(d.unit) : setError(d.error || "Couldn't find this unit.")))
       .catch(() => setError("Couldn't reach Study Pal. Check your connection."));
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function finishPreparing() {
+    if (!unit) return;
+    setPrepError(null);
+    setDone(new Set(unit.topics.flatMap((t, n) => (t.ready ? [n] : []))));
+    setPreparing(true);
+    const missing = unit.topics.flatMap((t, n) => (t.ready ? [] : [n]));
+    const result = await prepareTopics(unit.id, missing, (n) => setDone((d) => new Set(d).add(n)));
+    if (!result.ok) setPrepError(result.error);
+    await load();
+    setPreparing(false);
+  }
 
   if (error) {
     return (
@@ -35,6 +57,19 @@ export default function UnitView() {
       </div>
     );
   }
+
+  if (preparing) {
+    return (
+      <Preparing
+        facts={unit.topics.flatMap((t) => t.key_parts.map((k) => `${t.title}: ${k}`))}
+        topics={unit.topics.map((t) => t.title)}
+        done={done}
+        phase="questions"
+      />
+    );
+  }
+
+  const notReady = unit.topics.filter((t) => !t.ready).length;
 
   return (
     <section className="mt-4 animate-rise">
@@ -64,6 +99,19 @@ export default function UnitView() {
           </li>
         ))}
       </ol>
+
+      {notReady > 0 && (
+        <div className="mt-6 rounded-2xl bg-sky-soft p-4 text-sm">
+          <p className="font-semibold">
+            {notReady} topic{notReady === 1 ? "" : "s"} still need{notReady === 1 ? "s" : ""} test questions.
+          </p>
+          {prepError && <p className="mt-1 text-clay">{prepError}</p>}
+          <button onClick={finishPreparing}
+            className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
+            Finish preparing
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 rounded-2xl bg-clay-soft p-4 text-sm">
         Next up: a quick test to see what you already know. <span className="text-muted">(Coming in the next step.)</span>

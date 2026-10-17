@@ -19,7 +19,7 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/units/[id]">
       level: course?.level ?? "",
       current_topic: unit.current_topic,
       style: unit.style,
-      topics: unit.topics.map((t) => ({ title: t.title, key_parts: t.key_parts })),
+      topics: unit.topics.map((t) => ({ title: t.title, key_parts: t.key_parts, ready: t.baseline.length > 0 && t.final.length > 0 })),
     };
     return Response.json({ unit: out });
   } catch (e) {

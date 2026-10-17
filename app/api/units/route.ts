@@ -1,15 +1,13 @@
-// POST /api/units — add a course (if new) and a unit. The AI splits the unit's text into topics
-// and writes the baseline and final questions for each topic up to where the student is.
+// POST /api/units — add a course (if new) and a unit. The AI splits the unit's text into topics,
+// up to where the student is. Questions are written next, one topic at a time
+// (POST /api/units/<id>/questions), so the phone can show real progress.
 import { ensureStudent, findOrCreateCourse, createUnit } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
 import { AIError, askJson } from "@/lib/nvidia";
-import {
-  analyzePrompt, validAnalysis, questionsPrompt, validQuestionSets, toQuestions,
-  type Analysis, type QuestionSets,
-} from "@/lib/prompts";
+import { analyzePrompt, validAnalysis, type Analysis } from "@/lib/prompts";
 import type { Topic } from "@/lib/types";
 
-export const maxDuration = 300; // reading a whole unit can take the AI a while
+export const maxDuration = 300;
 
 const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
 
@@ -38,31 +36,18 @@ export async function POST(req: Request) {
   }
 
   try {
-    // 1. Split the unit into topics.
     const analysis = await askJson<Analysis>(
-      { task: "analyze", ...analyzePrompt({ course, level, unit, currentTopic, text }), maxTokens: 4096, temperature: 0.2 },
+      { task: "analyze", ...analyzePrompt({ course, level, unit, currentTopic, text }), maxTokens: 3000, temperature: 0.2 },
       validAnalysis,
     );
     const all = analysis.topics.slice(0, 8);
     const current = Math.min(Math.max(0, Number(analysis.current_index) || 0), all.length - 1);
-    const studied = all.slice(0, current + 1); // the AI reads from the first topic to where the student is
-
-    // 2. Write questions for every topic at once (one AI call per topic, in parallel).
-    const sets = await Promise.all(
-      studied.map((t) =>
-        askJson<QuestionSets>(
-          { task: "questions", ...questionsPrompt({ unit, topic: t }), maxTokens: 4096, temperature: 0.4 },
-          validQuestionSets,
-        ),
-      ),
-    );
-
-    const topics: Topic[] = studied.map((t, i) => ({
+    const topics: Topic[] = all.slice(0, current + 1).map((t) => ({
       title: String(t.title).slice(0, 120),
       key_parts: t.key_parts.map(String).slice(0, 5),
       notes: String(t.notes ?? "").slice(0, 1200),
-      baseline: toQuestions(sets[i].baseline, `t${i}b`),
-      final: toQuestions(sets[i].final, `t${i}f`),
+      baseline: [],
+      final: [],
       lessons: {},
     }));
 
@@ -77,15 +62,18 @@ export async function POST(req: Request) {
       style: null,
       topics,
     });
-    return Response.json({ id: row.id, topics: topics.length });
+    return Response.json({ id: row.id, topics: topics.map((t) => t.title) });
   } catch (e) {
     console.error("add unit failed", e);
-    const msg =
-      e instanceof AIError
-        ? e.kind === "busy"
-          ? "Study Pal is busy right now. Try again in a minute."
-          : "Study Pal couldn't make sense of this material. Please try again."
-        : "Something went wrong saving your unit. Please try again.";
-    return Response.json({ error: msg }, { status: 502 });
+    return Response.json({ error: aiMessage(e) }, { status: 502 });
   }
+}
+
+function aiMessage(e: unknown) {
+  if (e instanceof AIError) {
+    return e.kind === "busy"
+      ? "The AI is slow right now. Please try again in a minute."
+      : "Study Pal couldn't make sense of this material. Please try again.";
+  }
+  return "Something went wrong saving your unit. Please try again.";
 }

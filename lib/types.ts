@@ -91,6 +91,7 @@ export interface PublicQuestion {
 export interface PublicTopic {
   title: string;
   key_parts: string[];
+  ready: boolean; // its questions have been written
 }
 
 export interface PublicUnit {

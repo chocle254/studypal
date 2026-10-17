@@ -5,16 +5,10 @@ import { useRouter } from "next/navigation";
 import { getStudentId } from "@/lib/student";
 import { readPdfText, cleanText, UnreadableFileError } from "@/lib/pdf";
 import type { HomeCourse } from "@/lib/types";
+import { pickFacts, prepareTopics } from "@/lib/prepare";
+import Preparing from "@/components/Preparing";
 
-type Stage = "course" | "unit" | "working";
-
-const WORKING_LINES = [
-  "Reading your unit…",
-  "Finding the topics…",
-  "Picking out the key parts of each topic…",
-  "Writing your test questions…",
-  "Almost there…",
-];
+type Stage = "course" | "unit" | "reading" | "questions";
 
 const field =
   "w-full rounded-xl bg-surface border border-line px-4 py-3 text-base outline-none focus:border-sage transition";
@@ -31,17 +25,16 @@ export default function AddPage() {
   const [pasteMode, setPasteMode] = useState(false);
   const [pasted, setPasted] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [line, setLine] = useState(0);
-  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [facts, setFacts] = useState<string[]>([]);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const busy = useRef(false);
 
   useEffect(() => {
     fetch(`/api/home?student=${getStudentId()}`)
       .then((r) => r.json())
       .then((d) => setCourses(d.courses ?? []))
       .catch(() => {});
-    return () => {
-      if (timer.current) clearInterval(timer.current);
-    };
   }, []);
 
   function nextFromCourse(e: React.FormEvent) {
@@ -53,22 +46,24 @@ export default function AddPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy.current) return; // ignore extra taps while working
     setError(null);
     if (!unit.trim()) return setError("Give the unit a name.");
     if (!pasteMode && !file) return setError("Pick the PDF for this unit, or paste its text.");
+    busy.current = true;
 
     let text: string;
     try {
       text = pasteMode ? cleanText(pasted) : await readPdfText(file!);
     } catch (err) {
+      busy.current = false;
       return setError(
         err instanceof UnreadableFileError ? err.message : "I couldn't read that file. Try another PDF, or paste the text.",
       );
     }
 
-    setStage("working");
-    setLine(0);
-    timer.current = setInterval(() => setLine((l) => Math.min(l + 1, WORKING_LINES.length - 1)), 7000);
+    setFacts(pickFacts(text));
+    setStage("reading");
 
     try {
       const res = await fetch("/api/units", {
@@ -78,26 +73,25 @@ export default function AddPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.id) throw new Error(data.error || "Something went wrong. Please try again.");
+
+      setTopics(data.topics);
+      setDone(new Set());
+      setStage("questions");
+      const result = await prepareTopics(data.id, data.topics.map((_: string, n: number) => n), (n) =>
+        setDone((d) => new Set(d).add(n)),
+      );
+      // Even if one topic failed, the unit is saved: the unit page offers to finish preparing.
       router.push(`/unit/${data.id}`);
+      if (!result.ok) console.warn(result.error);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
       setStage("unit");
-    } finally {
-      if (timer.current) clearInterval(timer.current);
+      busy.current = false;
     }
   }
 
-  if (stage === "working") {
-    return (
-      <section className="mt-24 flex flex-col items-center text-center animate-rise">
-        <div className="relative w-20 h-20">
-          <div className="absolute inset-0 rounded-full bg-sage-soft animate-breathe" />
-          <div className="absolute inset-4 rounded-full bg-sage/60 animate-breathe" style={{ animationDelay: "0.6s" }} />
-        </div>
-        <p key={line} className="mt-8 text-lg font-semibold animate-rise">{WORKING_LINES[line]}</p>
-        <p className="mt-2 text-sm text-muted max-w-xs">This can take up to a minute. Keep this screen open.</p>
-      </section>
-    );
+  if (stage === "reading" || stage === "questions") {
+    return <Preparing facts={facts} topics={topics} done={done} phase={stage} />;
   }
 
   return (
