@@ -21,7 +21,7 @@ async function timed(label: string, model: string, extra: Record<string, unknown
         temperature: 0,
         ...extra,
       }),
-      signal: AbortSignal.timeout(40_000),
+      signal: AbortSignal.timeout(60_000),
     });
     const data = await res.json().catch(() => ({}));
     const msg = data?.choices?.[0]?.message ?? {};
@@ -52,5 +52,7 @@ export async function GET() {
     timed("thinking off flag", model, { chat_template_kwargs: { enable_thinking: false } }, "Answer with JSON only."),
     timed("detailed thinking off", model, {}, "detailed thinking off. Answer with JSON only."),
   ]);
-  return Response.json({ model, nemotron_models: nemotron, runs });
+  const out = { model, nemotron_models: nemotron, runs };
+  console.log("DIAG", JSON.stringify(out));
+  return Response.json(out);
 }
