@@ -31,7 +31,7 @@ create table if not exists attempts (
   id uuid primary key default gen_random_uuid(),
   unit_id uuid not null references units(id) on delete cascade,
   topic_index int not null,
-  kind text not null check (kind in ('baseline', 'check', 'final', 'quick')),
+  kind text not null check (kind in ('baseline', 'check', 'final', 'quick', 'retake')),
   score numeric not null,
   detail jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now()
@@ -52,3 +52,7 @@ alter table attempts enable row level security;
 -- create policy "studypal server access" on courses for all to anon using (true) with check (true);
 -- create policy "studypal server access" on units for all to anon using (true) with check (true);
 -- create policy "studypal server access" on attempts for all to anon using (true) with check (true);
+
+-- Migration (Oct 2026): allow "retake" attempts, for the second pass on a weak topic after the final test.
+-- alter table attempts drop constraint if exists attempts_kind_check;
+-- alter table attempts add constraint attempts_kind_check check (kind in ('baseline', 'check', 'final', 'quick', 'retake'));

@@ -31,7 +31,7 @@ function speedOptions(model: string, json: boolean): Record<string, unknown> {
   return o;
 }
 
-export type Task = "ping" | "analyze" | "questions" | "mark" | "lesson";
+export type Task = "ping" | "analyze" | "questions" | "mark" | "lesson" | "ask";
 
 export interface AskOptions {
   task: Task;

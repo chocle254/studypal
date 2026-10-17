@@ -29,7 +29,7 @@ export default function UnitView() {
   const [prepError, setPrepError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [testing, setTesting] = useState<false | "baseline" | "final">(false);
-  const [lesson, setLesson] = useState<{ topic: number; quick: boolean } | null>(null);
+  const [lesson, setLesson] = useState<{ topic: number; quick: boolean; fix?: boolean; fresh?: boolean } | null>(null);
   const [changingStyle, setChangingStyle] = useState(false);
 
   async function savePlan(style: Style, plan: number[]) {
@@ -150,21 +150,24 @@ export default function UnitView() {
       title: unit.topics[n].title,
       before: unit.progress[n]?.baseline ?? 0,
       after: unit.progress[n]?.final ?? 0,
+      retake: unit.progress[n]?.retake,
     }));
 
   // The next topic in the learning path after the one being taught (lessons flow straight into each other).
-  const nextInPath = lesson && !lesson.quick ? planForRound[planForRound.indexOf(lesson.topic) + 1] : undefined;
+  const nextInPath = lesson && !lesson.quick && !lesson.fix ? planForRound[planForRound.indexOf(lesson.topic) + 1] : undefined;
 
   if (lesson && unit.style) {
     return (
       <LessonView
-        key={`${lesson.topic}-${lesson.quick}`}
+        key={`${lesson.topic}-${lesson.quick}-${lesson.fix}`}
         unitId={unit.id}
         topic={lesson.topic}
         title={unit.topics[lesson.topic].title}
         keyParts={unit.topics[lesson.topic].key_parts}
         style={unit.style}
         quick={lesson.quick}
+        mode={lesson.fix ? "fix" : "full"}
+        fresh={lesson.fresh}
         nextTitle={nextInPath !== undefined ? unit.topics[nextInPath].title : undefined}
         onNext={() => {
           if (nextInPath !== undefined) {
@@ -229,7 +232,17 @@ export default function UnitView() {
         {unit.pages_read ? ` · pages ${unit.pages_read} read` : unit.parts_total > 1 ? ` · part ${unit.parts_read} of ${unit.parts_total} read` : ""}
       </p>
 
-      {roundFinished && <ScoreCompare round={currentRound} topics={compareFor(currentRound)} />}
+      {roundFinished && (
+        <ScoreCompare
+          round={currentRound}
+          topics={compareFor(currentRound)}
+          onFix={(topic, again) => {
+            if (!unit.style) return setChangingStyle(true);
+            setLesson({ topic, quick: false, fix: true, fresh: again });
+            window.scrollTo({ top: 0 });
+          }}
+        />
+      )}
 
       {baselineComplete && !roundFinished && <Results topics={roundResults} />}
 
@@ -314,7 +327,11 @@ export default function UnitView() {
       {finishedRounds.filter((r) => r !== currentRound).map((r) => (
         <details key={r} className="mt-4 rounded-2xl border border-line px-4 py-3">
           <summary className="text-sm font-semibold">Round {r + 1} results</summary>
-          <ScoreCompare round={r} topics={compareFor(r)} />
+          <ScoreCompare
+            round={r}
+            topics={compareFor(r)}
+            onFix={(topic, again) => unit.style && setLesson({ topic, quick: false, fix: true, fresh: again })}
+          />
         </details>
       ))}
 

@@ -110,7 +110,13 @@ function standInLesson(user: string) {
   const title = user.match(/Topic: (.*)/)?.[1] ?? "this topic";
   const parts = (user.match(/Key parts: (.*)/)?.[1] ?? "").split(/;\s*/).filter(Boolean);
   const quick = /quick brush-through/.test(user);
-  const sections = quick
+  const fix = /SECOND PASS/.test(user);
+  const deeper = /GO DEEPER/.test(user);
+  const sections = deeper
+    ? ["Harder example", "Edge cases", "How it connects"]
+    : fix
+      ? ["A fresh way to see it", "Where it went wrong", "Small steps", "Summary"]
+      : quick
     ? ["The core idea", "How it works", "Summary"]
     : ["What it is", "Why it matters", "How it works", "Its parts", "A real-life example", "Common mistakes", "Summary"];
   const steps = sections.map((name, i) => ({
@@ -128,7 +134,7 @@ function standInLesson(user: string) {
   return {
     intro: `[stand-in] Let's make "${title}" easy.`,
     steps,
-    check: [
+    check: deeper ? [] : fix ? [1, 2, 3, 4].map((n) => ({ part: parts[n % Math.max(1, parts.length)] ?? title, type: "typed", prompt: `[stand-in] Retake ${n}: explain ${parts[n % Math.max(1, parts.length)] ?? title}.`, answer: parts[n % Math.max(1, parts.length)] ?? title })).concat([{ part: title, type: "choice", prompt: `[stand-in] Which is about ${title}?`, options: [parts[0] ?? title, "Cooking rice", "Football rules", "Weather"], answer: parts[0] ?? title } as never]) : [
       { part: parts[0] ?? title, type: "typed", prompt: `[stand-in] In one sentence, what is ${title}?`, answer: parts[0] ?? title },
       { part: parts[1] ?? title, type: "typed", prompt: `[stand-in] Why does ${parts[1] ?? title} matter?`, answer: parts[1] ?? title },
       { part: title, type: "choice", prompt: `[stand-in] Which is about ${title}?`, options: [parts[0] ?? title, "Cooking rice", "Football rules", "Weather"], answer: parts[0] ?? title },
@@ -151,6 +157,10 @@ export async function standIn(opts: AskOptions): Promise<string> {
       return JSON.stringify(standInMark(opts.user));
     case "lesson":
       return JSON.stringify(standInLesson(opts.user));
+    case "ask": {
+      const q = opts.user.match(/The student asks: "([\s\S]*?)"\n/)?.[1] ?? "your question";
+      return JSON.stringify({ answer: `[stand-in] Good question: "${q}". Here is how it works: 1. First idea. 2. Second idea. 3. Third idea.` });
+    }
     default:
       return "{}";
   }

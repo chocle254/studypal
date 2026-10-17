@@ -5,26 +5,11 @@ import { isUuid } from "@/lib/student";
 import { AIError, askJson } from "@/lib/nvidia";
 import { lessonPrompt, validLesson, toQuestions, type RawLesson } from "@/lib/prompts";
 import { cleanCode, cleanDiagram } from "@/lib/diagram";
-import { splitParts } from "@/lib/parts";
+import { sourceFor } from "@/lib/parts";
 import type { Lesson, PublicLesson, Question, Style } from "@/lib/types";
 
 export const maxDuration = 180;
 const LESSON_VERSION = 3; // v3: points on their own lines, code examples for code topics
-
-// The part of the student's material that covers this topic: find the topic's title in its part, take the text from there.
-function sourceFor(material: string, part: number, title: string, max = 9000): string {
-  const parts = splitParts(material);
-  const text = (parts[part] ?? parts[0])?.text ?? "";
-  const words = title.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3);
-  const lower = text.toLowerCase();
-  let at = -1;
-  for (const w of words) {
-    at = lower.indexOf(w);
-    if (at !== -1) break;
-  }
-  const start = at === -1 ? 0 : Math.max(0, at - 400);
-  return text.slice(start, start + max);
-}
 
 const STYLES: Style[] = ["five", "gossip", "nerd"];
 
@@ -43,12 +28,38 @@ function toPublic(l: Lesson): PublicLesson {
   };
 }
 
+// Turn the AI's lesson into a saved lesson: check the diagrams and code, trim sizes.
+function shape(raw: RawLesson, style: Style, quick: boolean, idPrefix: string, checks: number): Lesson {
+  return {
+    v: LESSON_VERSION,
+    style,
+    quick,
+    intro: String(raw.intro ?? "").slice(0, 400),
+    steps: raw.steps.slice(0, 10).map((s) => {
+      const diagram = cleanDiagram(s.diagram);
+      const code = cleanCode(s.code);
+      return {
+        title: String(s.title ?? "").slice(0, 80),
+        text: String(s.text).slice(0, 2400),
+        ...(diagram ? { diagram } : {}),
+        ...(code ? { code } : {}),
+      };
+    }),
+    check: toQuestions(raw.check ?? [], idPrefix).slice(0, checks),
+  };
+}
+
+// Body: { student, unit, topic, style, quick?, mode?: "full"|"fix"|"deeper", fresh? }
+//   full   — the normal lesson (or a quick brush-through), saved per style
+//   fix    — a second pass after a weak final test; its 5 check questions are the retake
+//   deeper — 3–4 extra, harder sections added after the normal lesson
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { student, unit: unitId } = body;
   const index = Number(body.topic);
   const style: Style = STYLES.includes(body.style) ? body.style : "five";
-  const quick = !!body.quick;
+  const mode: "full" | "fix" | "deeper" = body.mode === "fix" ? "fix" : body.mode === "deeper" ? "deeper" : "full";
+  const quick = mode === "full" && !!body.quick;
   if (!isUuid(student) || !isUuid(unitId) || !Number.isInteger(index)) {
     return Response.json({ error: "That request didn't make sense." }, { status: 400 });
   }
@@ -58,20 +69,42 @@ export async function POST(req: Request) {
     const topic = unit?.topics[index];
     if (!unit || !topic) return Response.json({ error: "Not found." }, { status: 404 });
 
-    const saved = topic.lessons?.[style];
-    if (saved && saved.v === LESSON_VERSION && (!saved.quick || quick)) {
-      return Response.json({ lesson: toPublic(saved), cached: true });
+    // Saved lessons are reused (a "fresh" fix asks for a new second pass, explained another way).
+    if (mode === "full") {
+      const saved = topic.lessons?.[style];
+      if (saved && saved.v === LESSON_VERSION && (!saved.quick || quick)) {
+        return Response.json({ lesson: toPublic(saved), cached: true });
+      }
+    }
+    if (mode === "fix" && topic.fix && topic.fix.style === style && !body.fresh) {
+      return Response.json({ lesson: toPublic(topic.fix), cached: true });
+    }
+    if (mode === "deeper" && topic.deeper?.[style]?.length) {
+      return Response.json({ steps: topic.deeper[style], cached: true });
     }
 
-    // What the student got wrong in the first test, so the lesson focuses there.
-    const baseline = (await listAttempts([unitId]))
-      .filter((a) => a.topic_index === index && a.kind === "baseline")
-      .pop();
-    const results = ((baseline?.detail as { results?: { id: string; score: number }[] })?.results ?? []);
-    const mistakes = results
-      .filter((r) => r.score < 1)
-      .map((r) => topic.baseline.find((q: Question) => q.id === r.id)?.prompt)
-      .filter((x): x is string => !!x);
+    // What the student got wrong: in the first test for a normal lesson, in the final test (and any retake) for a fix.
+    const attempts = (await listAttempts([unitId])).filter((a) => a.topic_index === index);
+    const wrongIn = (kind: string, questions: Question[]) => {
+      const last = attempts.filter((a) => a.kind === kind).pop();
+      const results = ((last?.detail as { results?: { id: string; score: number }[] })?.results ?? []);
+      return results
+        .filter((r) => r.score < 1)
+        .map((r) => questions.find((q) => q.id === r.id)?.prompt)
+        .filter((x): x is string => !!x);
+    };
+    const mistakes =
+      mode === "fix"
+        ? [...wrongIn("final", topic.final), ...wrongIn("retake", topic.fix?.check ?? [])]
+        : mode === "full"
+          ? wrongIn("baseline", topic.baseline)
+          : [];
+    const earlier =
+      mode === "fix"
+        ? [...topic.baseline, ...topic.final, ...(topic.fix?.check ?? [])].map((q) => q.prompt)
+        : mode === "deeper"
+          ? (topic.lessons?.[style]?.steps ?? []).map((s) => s.title)
+          : [];
 
     const raw = await askJson<RawLesson>(
       {
@@ -83,36 +116,32 @@ export async function POST(req: Request) {
           style,
           mistakes,
           quick,
+          mode,
+          earlier,
         }),
-        maxTokens: 6000,
+        maxTokens: mode === "full" ? 6000 : 4500,
         temperature: 0.6,
       },
       validLesson,
     );
 
-    const lesson: Lesson = {
-      v: LESSON_VERSION,
+    const round = attempts.filter((a) => a.kind === "retake").length + 1;
+    const lesson = shape(
+      raw,
       style,
       quick,
-      intro: String(raw.intro).slice(0, 400),
-      steps: raw.steps.slice(0, 10).map((s) => {
-        const diagram = cleanDiagram(s.diagram);
-        const code = cleanCode(s.code);
-        return {
-          title: String(s.title ?? "").slice(0, 80),
-          text: String(s.text).slice(0, 2400),
-          ...(diagram ? { diagram } : {}),
-          ...(code ? { code } : {}),
-        };
-      }),
-      check: toQuestions(raw.check ?? [], `t${index}c${style[0]}`).slice(0, 3),
-    };
+      mode === "fix" ? `t${index}r${round}x` : `t${index}c${style[0]}`,
+      mode === "fix" ? 5 : 3,
+    );
 
     // Re-read before saving so nothing written meanwhile is lost.
     const fresh = (await getUnit(unitId, student))!;
-    fresh.topics[index] = { ...fresh.topics[index], lessons: { ...(fresh.topics[index].lessons ?? {}), [style]: lesson } };
+    const t = fresh.topics[index];
+    if (mode === "full") fresh.topics[index] = { ...t, lessons: { ...(t.lessons ?? {}), [style]: lesson } };
+    if (mode === "fix") fresh.topics[index] = { ...t, fix: lesson };
+    if (mode === "deeper") fresh.topics[index] = { ...t, deeper: { ...(t.deeper ?? {}), [style]: lesson.steps } };
     await updateUnit(unitId, student, { topics: fresh.topics });
-    return Response.json({ lesson: toPublic(lesson) });
+    return mode === "deeper" ? Response.json({ steps: lesson.steps }) : Response.json({ lesson: toPublic(lesson) });
   } catch (e) {
     console.error("lesson failed", e);
     const msg =

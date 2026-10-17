@@ -45,6 +45,8 @@ export interface Topic {
   baseline: Question[];
   final: Question[];
   lessons?: Partial<Record<Style, Lesson>>;
+  fix?: Lesson; // a second-pass lesson after a weak final test; its check is the 5-question retake
+  deeper?: Partial<Record<Style, LessonStep[]>>; // extra, harder sections the student asked for
 }
 
 export interface Unit {
@@ -70,7 +72,7 @@ export interface Course {
   created_at: string;
 }
 
-export type AttemptKind = "baseline" | "check" | "final" | "quick";
+export type AttemptKind = "baseline" | "check" | "final" | "quick" | "retake";
 
 export interface Attempt {
   id: string;
@@ -132,6 +134,7 @@ export interface TopicProgress {
   baseline?: number; // 0..1
   check?: number;
   final?: number;
+  retake?: number; // after the second-pass lesson for a weak topic
 }
 
 export interface TestTopic {

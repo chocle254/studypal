@@ -192,8 +192,21 @@ export function lessonPrompt(p: {
   style: string;
   mistakes: string[]; // questions the student got wrong or partly wrong
   quick: boolean;
+  mode?: "full" | "fix" | "deeper";
+  earlier?: string[]; // fix: questions already asked, so the retake asks new ones; deeper: section titles already taught
 }) {
-  const plan = p.quick
+  const mode = p.mode ?? "full";
+  const plan = mode === "fix"
+    ? `SECOND PASS. The student already had a full lesson on this topic and then did badly on the final test.
+Teach it again in 4 to 6 sections, but a DIFFERENT way from a normal lesson: a fresh everyday comparison, a different worked
+example, and very small steps. Go straight at the ideas behind the questions they got wrong, and explain why the wrong
+answers are wrong. End with a short summary.`
+    : mode === "deeper"
+      ? `GO DEEPER. The student finished the normal lesson and wants more. Write 3 or 4 NEW sections that go further:
+harder worked examples, edge cases and exceptions, how the ideas connect to other topics, and exam-style thinking.
+For programming or data topics include a fuller code example. Do NOT repeat these sections already taught:
+${(p.earlier ?? []).map((t) => `- ${t}`).join("\n")}`
+      : p.quick
     ? `This is a quick brush-through (the student already knows the topic well): 3 sections — the core idea, how it works, and a summary.`
     : `Teach the WHOLE topic properly, in 6 to 9 sections, building up from zero:
   1. What it is (the core idea in plain words, with an everyday comparison)
@@ -216,7 +229,7 @@ ${MATERIAL_START}
 ${p.source}
 ${MATERIAL_END}
 
-${p.mistakes.length ? `In the first test, the student struggled with these questions — make sure the lesson clears them up:\n${p.mistakes.map((m) => `- ${m}`).join("\n")}\n` : ""}
+${p.mistakes.length ? `${mode === "fix" ? "In the final test" : "In the first test"}, the student struggled with these questions — make sure the lesson clears them up:\n${p.mistakes.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Teaching style: ${STYLE_GUIDES[p.style] ?? STYLE_GUIDES.five}
 
 ${plan}
@@ -236,8 +249,17 @@ Each section has:
   {"kind":"parts","center":"...","parts":[{"name":"...","job":"..."}]}  for a thing and what each of its parts does (2 to 6 parts)
   Keep every label under 8 words.
 
-Then write "check": 3 questions to check the student understood the whole lesson (2 "typed", 1 "choice" with 4 options),
-each with a short model "answer". For "choice", the answer must be exactly one of the options.
+${
+  mode === "deeper"
+    ? `Set "check" to an empty list [].`
+    : mode === "fix"
+      ? `Then write "check": a RETAKE of 5 NEW questions that cover every key part of the topic (4 "typed", 1 "choice" with 4 options),
+each with a short model "answer". They must be different from these questions the student has already seen:
+${(p.earlier ?? []).map((q) => `- ${q}`).join("\n")}
+For "choice", the answer must be exactly one of the options.`
+      : `Then write "check": 3 questions to check the student understood the whole lesson (2 "typed", 1 "choice" with 4 options),
+each with a short model "answer". For "choice", the answer must be exactly one of the options.`
+}
 
 Return ONLY this JSON:
 {"intro":"one friendly sentence","steps":[{"title":"...","text":"...","diagram":{"kind":"flow","steps":["..."]}}],"check":[{"part":"...","type":"typed","prompt":"...","answer":"..."}]}`,
@@ -249,8 +271,38 @@ export function validLesson(l: RawLesson): boolean {
     !!l &&
     typeof l.intro === "string" &&
     Array.isArray(l.steps) &&
-    l.steps.length >= 3 &&
+    l.steps.length >= 2 &&
     l.steps.every((s) => s && typeof s.text === "string") &&
     Array.isArray(l.check)
   );
+}
+
+// ---------- 5. Answer a student's question about a topic ----------
+
+export function askPrompt(p: { unit: string; topic: string; source: string; section: string; style: string; question: string }) {
+  return {
+    system:
+      "You are Study Pal, a brilliant, kind tutor. You answer a student's question about their own study material clearly and correctly. You answer with JSON only.",
+    user: `Unit: ${p.unit}
+Topic: ${p.topic}
+
+The student's own material for this topic:
+${MATERIAL_START}
+${p.source}
+${MATERIAL_END}
+
+The lesson section they are reading:
+${p.section}
+
+Teaching style: ${STYLE_GUIDES[p.style] ?? STYLE_GUIDES.five}
+
+The student asks: "${p.question}"
+
+Answer in 3 to 8 sentences in easy English, using the material's facts where they help. If you list steps, put each on its own
+line starting with "1. ", "2. " … If the question isn't about this topic or subject, say kindly that you can only help with this unit.
+If a short code example genuinely helps (programming or data topics), add "code": {"language":"python","code":"..."} (at most 20 lines).
+
+Return ONLY this JSON:
+{"answer":"...","code":{"language":"...","code":"..."}}`,
+  };
 }

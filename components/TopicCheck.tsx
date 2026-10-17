@@ -10,6 +10,7 @@ export default function TopicCheck({
   topic,
   style,
   questions,
+  kind = "check",
   nextLabel,
   onNext,
   onBack,
@@ -18,6 +19,7 @@ export default function TopicCheck({
   topic: number;
   style: Style;
   questions: PublicQuestion[];
+  kind?: "check" | "retake";
   nextLabel: string;
   onNext: () => void;
   onBack: () => void;
@@ -39,7 +41,7 @@ export default function TopicCheck({
           student: getStudentId(),
           unit: unitId,
           topic,
-          kind: "check",
+          kind,
           style,
           answers: Object.fromEntries(questions.map((q) => [q.id, answers[q.id] ?? ""])),
         }),
@@ -65,7 +67,9 @@ export default function TopicCheck({
 
   return (
     <section className="mt-4 animate-rise">
-      <p className="text-xs font-bold uppercase tracking-wider text-muted">Quick check · 3 questions</p>
+      <p className="text-xs font-bold uppercase tracking-wider text-muted">
+        {kind === "retake" ? `Retake · ${questions.length} new questions` : `Quick check · ${questions.length} questions`}
+      </p>
 
       {result && verdict && (
         <div className={`mt-3 rounded-2xl p-4 ${verdict.tone} animate-rise`}>

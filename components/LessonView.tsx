@@ -7,6 +7,7 @@ import Diagram from "@/components/Diagram";
 import LessonText from "@/components/LessonText";
 import CodeBlock from "@/components/CodeBlock";
 import TopicCheck from "@/components/TopicCheck";
+import AskBox from "@/components/AskBox";
 
 // A lesson for one topic, one step at a time, each with a simple drawing.
 export default function LessonView({
@@ -16,6 +17,8 @@ export default function LessonView({
   keyParts,
   style,
   quick,
+  mode = "full",
+  fresh = false,
   nextTitle,
   onNext,
   onDone,
@@ -27,6 +30,8 @@ export default function LessonView({
   keyParts: string[];
   style: Style;
   quick: boolean;
+  mode?: "full" | "fix"; // fix: a second pass after a weak final test, ending in a retake
+  fresh?: boolean; // fix: explain it yet another way
   nextTitle?: string; // the next topic in the student's learning path, if any
   onNext?: () => void;
   onDone: () => void;
@@ -37,6 +42,30 @@ export default function LessonView({
   const [step, setStep] = useState(0);
   const [tip, setTip] = useState(0);
   const [checking, setChecking] = useState(false);
+  const [deeper, setDeeper] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const fix = mode === "fix";
+
+  // "Go deeper": fetch 3–4 harder sections and add them after the current step.
+  async function goDeeper() {
+    if (!lesson || deeper === "loading") return;
+    setDeeper("loading");
+    try {
+      const res = await fetch("/api/lesson", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student: getStudentId(), unit: unitId, topic, style, mode: "deeper" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !Array.isArray(data.steps)) throw new Error();
+      const at = lesson.steps.length;
+      setLesson({ ...lesson, steps: [...lesson.steps, ...data.steps] });
+      setStep(at);
+      setDeeper("done");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {
+      setDeeper("error");
+    }
+  }
 
   async function fetchLesson() {
     setError(null);
@@ -44,7 +73,7 @@ export default function LessonView({
       const res = await fetch("/api/lesson", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student: getStudentId(), unit: unitId, topic, style, quick }),
+        body: JSON.stringify({ student: getStudentId(), unit: unitId, topic, style, quick, mode, fresh }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.lesson) throw new Error(data.error || "Couldn't write this lesson.");
@@ -57,7 +86,7 @@ export default function LessonView({
   useEffect(() => {
     fetchLesson();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unitId, topic, style, quick]);
+  }, [unitId, topic, style, quick, mode, fresh]);
 
   // While the lesson is being written, cycle through the topic's key parts.
   useEffect(() => {
@@ -87,7 +116,7 @@ export default function LessonView({
           <div className="absolute inset-0 rounded-full bg-sage-soft animate-breathe" />
           <div className="absolute inset-3 rounded-full bg-sage/60 animate-breathe" style={{ animationDelay: "0.6s" }} />
         </div>
-        <p className="mt-6 font-bold">Writing your lesson on {title}…</p>
+        <p className="mt-6 font-bold">{fix ? `Explaining ${title} another way…` : `Writing your lesson on ${title}…`}</p>
         <p className="mt-1 text-sm text-muted">In &ldquo;{styleName}&rdquo; style, with drawings.</p>
         {keyParts.length > 0 && (
           <p key={tip} className="mt-6 mx-auto max-w-xs rounded-xl bg-surface border border-line px-4 py-3 text-sm animate-rise">
@@ -113,8 +142,9 @@ export default function LessonView({
           topic={topic}
           style={style}
           questions={lesson.check}
-          nextLabel={nextLabel}
-          onNext={goOn}
+          kind={fix ? "retake" : "check"}
+          nextLabel={fix ? "See my results" : nextLabel}
+          onNext={fix ? onDone : goOn}
           onBack={() => setChecking(false)}
         />
       </>
@@ -128,7 +158,7 @@ export default function LessonView({
     <section className="mt-4 animate-rise">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted">
-          {lesson.quick ? "Quick brush-through" : "Lesson"} · {styleName}
+          {fix ? "Second pass" : lesson.quick ? "Quick brush-through" : "Lesson"} · {styleName}
         </p>
         <button onClick={onExit} className="text-sm text-muted underline underline-offset-4">Close</button>
       </div>
@@ -150,6 +180,8 @@ export default function LessonView({
         {s.code && <CodeBlock language={s.code.language} code={s.code.code} />}
         {s.diagram && <Diagram d={s.diagram} />}
       </article>
+
+      <AskBox key={`ask-${step}`} unitId={unitId} topic={topic} style={style} section={`${s.title}\n${s.text}`} />
 
       {!last ? (
         <div className="mt-4 flex gap-2">
@@ -180,11 +212,17 @@ export default function LessonView({
               }}
               className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition"
             >
-              Check what you learned →
+              {fix ? "Take the retake →" : "Check what you learned →"}
             </button>
           ) : (
             <button onClick={goOn} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
               {nextLabel}
+            </button>
+          )}
+          {!fix && !lesson.quick && deeper !== "done" && (
+            <button onClick={goDeeper} disabled={deeper === "loading"}
+              className="w-full rounded-xl border border-sage text-sage py-3 font-bold disabled:opacity-60">
+              {deeper === "loading" ? "Writing harder sections…" : deeper === "error" ? "Couldn't go deeper — try again" : "Go deeper on this topic"}
             </button>
           )}
           <button onClick={() => setStep((n) => Math.max(0, n - 1))} className="w-full rounded-xl border border-line py-3 font-semibold">

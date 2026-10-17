@@ -16,7 +16,8 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { student, unit: unitId } = body;
   const topicIndex = Number(body.topic);
-  const kind: "baseline" | "final" | "check" = body.kind === "final" ? "final" : body.kind === "check" ? "check" : "baseline";
+  const kind: "baseline" | "final" | "check" | "retake" =
+    body.kind === "final" ? "final" : body.kind === "check" ? "check" : body.kind === "retake" ? "retake" : "baseline";
   const answers: Record<string, string> = body.answers && typeof body.answers === "object" ? body.answers : {};
   if (!isUuid(student) || !isUuid(unitId) || !Number.isInteger(topicIndex)) {
     return Response.json({ error: "That request didn't make sense." }, { status: 400 });
@@ -27,7 +28,11 @@ export async function POST(req: Request) {
     const topic = unit?.topics[topicIndex];
     if (!unit || !topic) return Response.json({ error: "Not found." }, { status: 404 });
     const questions: Question[] =
-      kind === "check" ? (topic.lessons?.[body.style as keyof typeof topic.lessons]?.check ?? []) : topic[kind];
+      kind === "check"
+        ? (topic.lessons?.[body.style as keyof typeof topic.lessons]?.check ?? [])
+        : kind === "retake"
+          ? (topic.fix?.check ?? [])
+          : topic[kind];
     if (!questions.length) return Response.json({ error: "There are no questions to mark here." }, { status: 409 });
     const given = (q: Question) => String(answers[q.id] ?? "").slice(0, 1500);
 
