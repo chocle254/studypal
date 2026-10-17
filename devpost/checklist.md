@@ -94,6 +94,9 @@ Activity mode:
 
 ## Revisions
 
+- AI provider is now a setting (AI_BASE_URL, AI_API_KEY, AI_MODEL), with Groq's `openai/gpt-oss-20b` as the default and Nemotron as the fallback — NVIDIA's free endpoint queued for 45–60s even on tiny answers (timing check: lightning model, thinking on or off), so adding a unit timed out. The learner chose to switch to Groq, which they already use on another project. Long notes are trimmed to ~24,000 characters for Groq's per-minute token limit.
+- Adding a unit is now two steps: topics first, then questions one topic at a time (`POST /api/units/<id>/questions`), with a waiting screen that shows facts from the student's notes and topic-by-topic progress — the learner asked for something to keep students busy while it reads, and smaller AI jobs time out less. Extra taps are ignored while working.
+
 - Added `supabase/schema.sql`, `lib/types.ts`, `lib/standin.ts` and a local JSON stand-in database (used only when Supabase settings are missing) — needed to build and verify offline, since this workspace cannot reach NVIDIA or Supabase directly.
 - The server uses Supabase's publishable key (kept only in Vercel) with table policies allowing it to read and write, not the secret key — the learner couldn't reach the secret key from their Supabase login; agreed as a hackathon-only simplification, to switch back before real users.
 - Slice 1 verified live: health page on studypal-murex.vercel.app shows database mode supabase ok and AI mode nemotron ok with `nvidia/nemotron-3.5-lightning-30b-a3b`. Health page also lists visible setting names and usable models, and times out the AI check after 25s, after the first live check hung.

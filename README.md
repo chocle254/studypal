@@ -9,14 +9,14 @@ Built for Devpost's **Build With AI: Basics** hackathon. The planning docs are i
 - **Phone browser** shows the screens and reads PDF text on the phone.
 - **Vercel** serves the app and runs small server functions that hold the keys.
 - **Supabase** stores courses, units, topics, questions, lessons and scores.
-- **NVIDIA Nemotron** reads the unit, writes questions, marks typed answers, and writes lessons.
+- **The AI** (Groq by default, or NVIDIA Nemotron, chosen by settings) reads the unit, writes questions, marks typed answers, and writes lessons.
 
 There's no sign-in: each phone gets a random secret ID the first time it opens the app.
 
 ## Run it
 
 1. Create a Supabase project and run [`supabase/schema.sql`](supabase/schema.sql) in its SQL editor.
-2. Get an NVIDIA API key at https://build.nvidia.com.
+2. Get a Groq API key at https://console.groq.com (or an NVIDIA key at https://build.nvidia.com).
 3. Set the variables in [`.env.example`](.env.example) (in Vercel's project settings, or in a local `.env.local`).
 4. `npm install`, then `npm run dev`, and open http://localhost:3000.
 

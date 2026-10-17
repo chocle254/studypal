@@ -3,7 +3,7 @@
 // (POST /api/units/<id>/questions), so the phone can show real progress.
 import { ensureStudent, findOrCreateCourse, createUnit } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
-import { AIError, askJson } from "@/lib/nvidia";
+import { AIError, askJson, aiProvider } from "@/lib/nvidia";
 import { analyzePrompt, validAnalysis, type Analysis } from "@/lib/prompts";
 import type { Topic } from "@/lib/types";
 
@@ -35,9 +35,12 @@ export async function POST(req: Request) {
     );
   }
 
+  // Groq's free plan limits tokens per minute, so send it a shorter slice of very long notes.
+  const forAI = aiProvider() === "groq" ? text.slice(0, 24_000) : text;
+
   try {
     const analysis = await askJson<Analysis>(
-      { task: "analyze", ...analyzePrompt({ course, level, unit, currentTopic, text }), maxTokens: 3000, temperature: 0.2 },
+      { task: "analyze", ...analyzePrompt({ course, level, unit, currentTopic, text: forAI }), maxTokens: 3000, temperature: 0.2 },
       validAnalysis,
     );
     const all = analysis.topics.slice(0, 8);

@@ -1,12 +1,35 @@
-// Calls NVIDIA's Nemotron through its OpenAI-compatible endpoint.
+// Calls the AI through an OpenAI-compatible endpoint: Groq or NVIDIA, chosen by settings.
+//   AI_BASE_URL, AI_API_KEY, AI_MODEL  (e.g. https://api.groq.com/openai/v1 + a Groq key + openai/gpt-oss-20b)
+//   If those aren't set, the NVIDIA_* settings are used (NVIDIA's Nemotron).
 // Server only: the key lives in Vercel's settings and never reaches the phone.
-// With no NVIDIA_API_KEY set, a clearly labelled stand-in answers instead, so the app
-// can be built and checked without network access to NVIDIA.
+// With no key at all, a clearly labelled stand-in answers instead, so the app
+// can be built and checked without network access.
 
 import "server-only";
 import { standIn } from "./standin";
 
-const BASE = process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1";
+const KEY = process.env.AI_API_KEY || process.env.NVIDIA_API_KEY;
+const BASE = (
+  process.env.AI_BASE_URL ||
+  (process.env.AI_API_KEY ? "https://api.groq.com/openai/v1" : process.env.NVIDIA_BASE_URL) ||
+  "https://integrate.api.nvidia.com/v1"
+).replace(/\/$/, "");
+
+export function aiProvider(): "groq" | "nvidia" | "other" {
+  return BASE.includes("groq.com") ? "groq" : BASE.includes("nvidia.com") ? "nvidia" : "other";
+}
+
+// Turn off long "thinking" where the model supports it: it was the main cause of slow answers.
+function speedOptions(model: string, json: boolean): Record<string, unknown> {
+  const o: Record<string, unknown> = {};
+  if (/gpt-oss/i.test(model)) o.reasoning_effort = "low";
+  if (/qwen3/i.test(model) && aiProvider() === "groq") o.reasoning_effort = "none";
+  if (aiProvider() === "nvidia" && /nemotron-3|nemotron-nano-3/i.test(model)) {
+    o.chat_template_kwargs = { enable_thinking: false };
+  }
+  if (json && aiProvider() === "groq") o.response_format = { type: "json_object" };
+  return o;
+}
 
 export type Task = "ping" | "analyze" | "questions" | "mark" | "lesson";
 
@@ -17,6 +40,7 @@ export interface AskOptions {
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number; // per attempt; default 55s
+  json?: boolean; // ask the provider for JSON output when it supports it
   retries?: number; // extra attempts after the first; default 1
 }
 
@@ -29,12 +53,16 @@ export class AIError extends Error {
   }
 }
 
-export function aiMode(): "nemotron" | "stand-in" {
-  return process.env.NVIDIA_API_KEY ? "nemotron" : "stand-in";
+export function aiMode(): "live" | "stand-in" {
+  return KEY ? "live" : "stand-in";
 }
 
 export function aiModel(): string {
-  return process.env.NVIDIA_MODEL || "nvidia/nemotron-3.5-lightning-30b-a3b";
+  return (
+    process.env.AI_MODEL ||
+    (process.env.AI_API_KEY ? "openai/gpt-oss-20b" : process.env.NVIDIA_MODEL) ||
+    "nvidia/nemotron-3.5-lightning-30b-a3b"
+  );
 }
 
 // Remove any visible reasoning the model adds before its answer.
@@ -52,7 +80,7 @@ export async function ask(opts: AskOptions): Promise<string> {
       const res = await fetch(`${BASE}/chat/completions`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.NVIDIA_API_KEY}`,
+          Authorization: `Bearer ${KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -63,6 +91,7 @@ export async function ask(opts: AskOptions): Promise<string> {
           ],
           temperature: opts.temperature ?? 0.4,
           max_tokens: opts.maxTokens ?? 2048,
+          ...speedOptions(aiModel(), !!opts.json),
         }),
         signal: AbortSignal.timeout(opts.timeoutMs ?? 55_000),
       });
@@ -109,8 +138,8 @@ export async function askJson<T>(opts: AskOptions, valid: (v: T) => boolean): Pr
   for (let attempt = 0; attempt < 2; attempt++) {
     const text = await ask(
       attempt === 0
-        ? opts
-        : { ...opts, user: opts.user + "\n\nReturn ONLY valid JSON in exactly the requested shape." },
+        ? { ...opts, json: true }
+        : { ...opts, json: true, user: opts.user + "\n\nReturn ONLY valid JSON in exactly the requested shape." },
     );
     try {
       const v = parseJson<T>(text);
@@ -126,7 +155,7 @@ export async function askJson<T>(opts: AskOptions, valid: (v: T) => boolean): Pr
 export async function listModels(): Promise<string[]> {
   if (aiMode() === "stand-in") return [];
   const res = await fetch(`${BASE}/models`, {
-    headers: { Authorization: `Bearer ${process.env.NVIDIA_API_KEY}` },
+    headers: { Authorization: `Bearer ${KEY}` },
     signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) throw new Error(`models list ${res.status}`);

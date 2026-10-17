@@ -156,6 +156,8 @@ studypal/
 
 - **The publishable key with table policies** instead of the secret key on the server — the learner's Supabase login couldn't open the project's secret key. The key stays only in Vercel; anyone holding it could read Study Pal's data, so switch to the secret key before real users.
 
+- **AI provider as a setting, Groq by default** instead of Nemotron only — NVIDIA's free queue made each answer take 45–60s. Groq's free plan limits tokens per minute, so long notes are trimmed to about 24,000 characters for the AI.
+
 ## Decisions and Open Issues
 Learner choices:
 - Vercel for hosting, Supabase for data, Nemotron for the AI, a switch to paid AI when users grow.
