@@ -13,13 +13,22 @@ export interface Question {
 
 export type Style = "five" | "gossip" | "nerd";
 
+// A diagram the app draws itself from simple structured data (the AI only supplies the words).
+export type Diagram =
+  | { kind: "flow"; title?: string; steps: string[] } // a process, top to bottom
+  | { kind: "cycle"; title?: string; steps: string[] } // a process that repeats
+  | { kind: "compare"; title?: string; left: { title: string; points: string[] }; right: { title: string; points: string[] } }
+  | { kind: "parts"; title?: string; center: string; parts: { name: string; job: string }[] }; // a thing and what each part does
+
 export interface LessonStep {
   title: string;
   text: string;
-  svg?: string; // a simple AI-drawn diagram; falls back to a text card if missing or broken
+  diagram?: Diagram; // only when a picture genuinely helps
+  svg?: string; // older lessons only; no longer shown
 }
 
 export interface Lesson {
+  v?: number; // lesson format version; older lessons are rewritten
   style: Style;
   quick?: boolean; // a short brush-through for a topic the student already knows
   intro: string;

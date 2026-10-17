@@ -4,10 +4,27 @@ import { getUnit, listAttempts, updateUnit } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
 import { AIError, askJson } from "@/lib/nvidia";
 import { lessonPrompt, validLesson, toQuestions, type RawLesson } from "@/lib/prompts";
-import { safeSvg } from "@/lib/svg";
+import { cleanDiagram } from "@/lib/diagram";
+import { splitParts } from "@/lib/parts";
 import type { Lesson, PublicLesson, Question, Style } from "@/lib/types";
 
-export const maxDuration = 120;
+export const maxDuration = 180;
+const LESSON_VERSION = 2; // version 2: full-topic, in-depth lessons with structured diagrams
+
+// The part of the student's material that covers this topic: find the topic's title in its part, take the text from there.
+function sourceFor(material: string, part: number, title: string, max = 9000): string {
+  const parts = splitParts(material);
+  const text = (parts[part] ?? parts[0])?.text ?? "";
+  const words = title.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3);
+  const lower = text.toLowerCase();
+  let at = -1;
+  for (const w of words) {
+    at = lower.indexOf(w);
+    if (at !== -1) break;
+  }
+  const start = at === -1 ? 0 : Math.max(0, at - 400);
+  return text.slice(start, start + max);
+}
 
 const STYLES: Style[] = ["five", "gossip", "nerd"];
 
@@ -16,7 +33,7 @@ function toPublic(l: Lesson): PublicLesson {
     style: l.style,
     quick: !!l.quick,
     intro: l.intro,
-    steps: l.steps,
+    steps: l.steps.map((s) => ({ title: s.title, text: s.text, ...(s.diagram ? { diagram: s.diagram } : {}) })),
     check: l.check.map((q) => ({ id: q.id, type: q.type, prompt: q.prompt, ...(q.options ? { options: q.options } : {}) })),
   };
 }
@@ -37,7 +54,9 @@ export async function POST(req: Request) {
     if (!unit || !topic) return Response.json({ error: "Not found." }, { status: 404 });
 
     const saved = topic.lessons?.[style];
-    if (saved && (!!saved.quick === quick || !quick)) return Response.json({ lesson: toPublic(saved), cached: true });
+    if (saved && saved.v === LESSON_VERSION && (!!saved.quick === quick || !quick)) {
+      return Response.json({ lesson: toPublic(saved), cached: true });
+    }
 
     // What the student got wrong in the first test, so the lesson focuses there.
     const baseline = (await listAttempts([unitId]))
@@ -52,20 +71,28 @@ export async function POST(req: Request) {
     const raw = await askJson<RawLesson>(
       {
         task: "lesson",
-        ...lessonPrompt({ unit: unit.name, topic, style, mistakes, quick }),
-        maxTokens: 5000,
+        ...lessonPrompt({
+          unit: unit.name,
+          topic,
+          source: sourceFor(unit.material_text, topic.part ?? 0, topic.title),
+          style,
+          mistakes,
+          quick,
+        }),
+        maxTokens: 6000,
         temperature: 0.6,
       },
       validLesson,
     );
 
     const lesson: Lesson = {
+      v: LESSON_VERSION,
       style,
       quick,
       intro: String(raw.intro).slice(0, 400),
-      steps: raw.steps.slice(0, 6).map((s) => {
-        const svg = safeSvg(s.svg);
-        return { title: String(s.title ?? "").slice(0, 80), text: String(s.text).slice(0, 900), ...(svg ? { svg } : {}) };
+      steps: raw.steps.slice(0, 10).map((s) => {
+        const diagram = cleanDiagram(s.diagram);
+        return { title: String(s.title ?? "").slice(0, 80), text: String(s.text).slice(0, 2000), ...(diagram ? { diagram } : {}) };
       }),
       check: toQuestions(raw.check ?? [], `t${index}c${style[0]}`).slice(0, 3),
     };

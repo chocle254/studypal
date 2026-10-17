@@ -135,15 +135,26 @@ export default function UnitView() {
   const planForRound = (unit.plan ?? []).filter((i) => roundIdx.includes(i));
   const needsSetup = baselineComplete && (changingStyle || (!allStrong && (!unit.style || planForRound.length === 0)));
 
+  // The next topic in the learning path after the one being taught (lessons flow straight into each other).
+  const nextInPath = lesson && !lesson.quick ? planForRound[planForRound.indexOf(lesson.topic) + 1] : undefined;
+
   if (lesson && unit.style) {
     return (
       <LessonView
+        key={`${lesson.topic}-${lesson.quick}`}
         unitId={unit.id}
         topic={lesson.topic}
         title={unit.topics[lesson.topic].title}
         keyParts={unit.topics[lesson.topic].key_parts}
         style={unit.style}
         quick={lesson.quick}
+        nextTitle={nextInPath !== undefined ? unit.topics[nextInPath].title : undefined}
+        onNext={() => {
+          if (nextInPath !== undefined) {
+            setLesson({ topic: nextInPath, quick: false });
+            window.scrollTo({ top: 0 });
+          }
+        }}
         onDone={async () => {
           setLesson(null);
           await load();

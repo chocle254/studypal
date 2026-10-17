@@ -94,6 +94,8 @@ Activity mode:
 
 ## Revisions
 
+- Lessons rebuilt after the learner's slice-4 check: AI-drawn SVG pictures were meaningless, so diagrams are now structured data the app draws itself (flowchart, cycle, side-by-side comparison, a thing and its parts), used only when they help; lessons were too shallow, so they now teach the whole topic in 6–9 sections (what it is, why it matters, how it works, parts/types, a worked real-life example, common mistakes, summary) from the student's own material for that topic, not just the tested ideas; and a finished lesson leads straight to the next topic in the learning path. Older lessons are rewritten automatically (lesson version 2).
+
 - Long PDFs are read part by part: about 15 pages (22,000 characters) per part, each part becoming one round of up to 5 topics (related sections grouped so nothing is dropped). The first part is read when the unit is added; "Read the next part" reads the next one. Rounds are now defined by part (replacing fixed groups of 4). New `units.parts_read` and `units.reached_current` columns. A wrong unit can be deleted. Learner's request after a book-length PDF was only read for its first ~15 pages; most of their PDFs are 80+ pages.
 
 - Units now run in rounds of up to 4 topics (test → teach → test, then the next round); only the current round's questions are prepared. Slices 3–5 apply per round, and slice 5's before-and-after covers the finished round. Learner's request after a long unit (8 topics) hit Groq's per-minute limit on the last two topics. AI calls now wait and retry when the provider says to slow down (HTTP 429).

@@ -148,7 +148,7 @@ studypal/
 ## What Was Simplified and Why
 - **A random device ID** instead of real accounts — accounts add a login flow that doesn't prove the kernel. The fuller version needs sign-in and secure per-student data rules.
 - **Extracted text in Supabase** instead of PDF files in a phone folder — a browser can't create a visible folder, and text saves storage.
-- **AI-drawn SVG diagrams** instead of generated images — no extra service, and they can carry calm colors and motion.
+- **Structured diagrams the app draws** (flowchart, cycle, comparison, parts) instead of AI-drawn SVG or generated images — AI-drawn SVG was tried and looked meaningless; the AI now only supplies the words and the app draws a clean, readable diagram.
 - **Four tables with topics, questions and lessons inside `units`** instead of a table for each — fewer tables to set up for a small proof.
 - **Unit card images are generated artwork** instead of picture search — no extra service.
 - **Typed answers are marked in one AI call per topic** — to stay inside the free limits.

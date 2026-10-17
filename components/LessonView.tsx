@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getStudentId } from "@/lib/student";
 import { STYLES, type PublicLesson, type Style } from "@/lib/types";
-import DiagramSvg from "@/components/DiagramSvg";
+import Diagram from "@/components/Diagram";
 
 // A lesson for one topic, one step at a time, each with a simple drawing.
 export default function LessonView({
@@ -13,6 +13,8 @@ export default function LessonView({
   keyParts,
   style,
   quick,
+  nextTitle,
+  onNext,
   onDone,
   onExit,
 }: {
@@ -22,6 +24,8 @@ export default function LessonView({
   keyParts: string[];
   style: Style;
   quick: boolean;
+  nextTitle?: string; // the next topic in the student's learning path, if any
+  onNext?: () => void;
   onDone: () => void;
   onExit: () => void;
 }) {
@@ -111,33 +115,49 @@ export default function LessonView({
       </div>
 
       <article key={step} className="mt-4 rounded-2xl bg-surface border border-line overflow-hidden animate-rise">
-        {s.svg ? (
-          <DiagramSvg svg={s.svg} />
-        ) : (
-          <div className="h-24 bg-sage-soft grid place-items-center text-3xl font-extrabold text-sage">{step + 1}</div>
-        )}
         <div className="p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-muted">Step {step + 1} of {lesson.steps.length}</p>
           <p className="mt-1 text-lg font-bold">{s.title}</p>
           <p className="mt-2 leading-relaxed">{s.text}</p>
         </div>
+        {s.diagram && <Diagram d={s.diagram} />}
       </article>
 
-      <div className="mt-4 flex gap-2">
-        <button
-          onClick={() => setStep((n) => Math.max(0, n - 1))}
-          disabled={step === 0}
-          className="flex-1 rounded-xl border border-line py-3 font-semibold disabled:opacity-40"
-        >
-          Back
-        </button>
-        <button
-          onClick={() => (last ? onDone() : setStep((n) => n + 1))}
-          className="flex-[2] rounded-xl bg-sage text-bg py-3 font-bold active:scale-[0.98] transition"
-        >
-          {last ? "I've got it" : "Next"}
-        </button>
-      </div>
+      {!last ? (
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={() => setStep((n) => Math.max(0, n - 1))}
+            disabled={step === 0}
+            className="flex-1 rounded-xl border border-line py-3 font-semibold disabled:opacity-40"
+          >
+            Back
+          </button>
+          <button
+            onClick={() => {
+              setStep((n) => n + 1);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex-[2] rounded-xl bg-sage text-bg py-3 font-bold active:scale-[0.98] transition"
+          >
+            Next
+          </button>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-2">
+          {nextTitle && onNext ? (
+            <button onClick={onNext} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
+              Next topic: {nextTitle} →
+            </button>
+          ) : (
+            <button onClick={onDone} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
+              Done — back to my unit
+            </button>
+          )}
+          <button onClick={() => setStep((n) => Math.max(0, n - 1))} className="w-full rounded-xl border border-line py-3 font-semibold">
+            Back
+          </button>
+        </div>
+      )}
     </section>
   );
 }

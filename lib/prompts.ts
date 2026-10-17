@@ -181,46 +181,61 @@ Still clear and step by step.`,
 
 export interface RawLesson {
   intro: string;
-  steps: { title: string; text: string; svg?: string }[];
+  steps: { title: string; text: string; diagram?: unknown }[];
   check: RawQuestion[];
 }
 
 export function lessonPrompt(p: {
   unit: string;
   topic: { title: string; key_parts: string[]; notes: string };
+  source: string; // the student's own material for this topic
   style: string;
   mistakes: string[]; // questions the student got wrong or partly wrong
   quick: boolean;
 }) {
-  const steps = p.quick ? "2 to 3 steps (a quick brush-through: the student already knows this topic well)" : "4 to 6 steps";
+  const plan = p.quick
+    ? `This is a quick brush-through (the student already knows the topic well): 3 sections — the core idea, how it works, and a summary.`
+    : `Teach the WHOLE topic properly, in 6 to 9 sections, building up from zero:
+  1. What it is (the core idea in plain words, with an everyday comparison)
+  2. Why it matters (what problem it solves, what goes wrong without it)
+  3–5. How it works, step by step, and its parts or types — explain EVERY key part and every important idea in the material,
+     not only the ideas from the test
+  6. A worked example from real life, walked through step by step
+  7. Common mistakes and confusions, and how to avoid them
+  8. A short summary the student could say back in their own words`;
   return {
     system:
-      "You are Study Pal, a brilliant, kind teacher. You make hard ideas simple and memorable, and you never make the student feel stupid. You answer with JSON only.",
+      "You are Study Pal, a brilliant, kind teacher. You make hard ideas simple and memorable and you teach in depth, never just a surface skim. You never make the student feel stupid. You answer with JSON only.",
     user: `Unit: ${p.unit}
 Topic: ${p.topic.title}
 Key parts: ${p.topic.key_parts.join("; ")}
-Topic notes (from the student's own material): ${p.topic.notes}
-${p.mistakes.length ? `In the first test, the student struggled with:\n${p.mistakes.map((m) => `- ${m}`).join("\n")}\nFocus on these ideas.` : ""}
+Short notes: ${p.topic.notes}
 
+The student's own material for this topic:
+${MATERIAL_START}
+${p.source}
+${MATERIAL_END}
+
+${p.mistakes.length ? `In the first test, the student struggled with these questions — make sure the lesson clears them up:\n${p.mistakes.map((m) => `- ${m}`).join("\n")}\n` : ""}
 Teaching style: ${STYLE_GUIDES[p.style] ?? STYLE_GUIDES.five}
 
-Teach this topic in ${steps}. Easy English. Go step by step: each step builds on the last.
-Include at least one real-life example or analogy the student can relate to (for example: a white blood cell is like a dog
-that chases an intruder out of the compound).
-For each step:
-- "title": a few words
-- "text": 2 to 4 short sentences
-- "svg": a simple diagram that helps the idea land. Rules: start with <svg and use viewBox="0 0 320 200"; only basic shapes
-  (rect, circle, ellipse, line, path, polygon) and <text>; at most 6 short text labels (font-size 12 or more); soft colors only:
-  #6f9282 (sage), #c48f72 (clay), #8ea7b5 (sky), #dfe8e2, #f0e2d8, #e0e8ec, and #2f3532 for text and outlines; no scripts,
-  no images, no links. Keep it simple and clearly labelled.
+${plan}
 
-Then write "check": 3 short questions to check the student understood (2 "typed", 1 "choice" with 4 options),
+Each section has:
+- "title": a few words
+- "text": 4 to 8 sentences in easy English, step by step. Use the material's real facts, names and numbers.
+- "diagram" (ONLY when a picture genuinely helps; otherwise leave it out). Pick ONE shape:
+  {"kind":"flow","steps":["...","..."]}  for a process in order (3 to 7 short steps)
+  {"kind":"cycle","steps":["...","..."]}  for a process that repeats (3 to 6 steps)
+  {"kind":"compare","left":{"title":"...","points":["..."]},"right":{"title":"...","points":["..."]}}  for two things side by side
+  {"kind":"parts","center":"...","parts":[{"name":"...","job":"..."}]}  for a thing and what each of its parts does (2 to 6 parts)
+  Keep every label under 8 words.
+
+Then write "check": 3 questions to check the student understood the whole lesson (2 "typed", 1 "choice" with 4 options),
 each with a short model "answer". For "choice", the answer must be exactly one of the options.
-Use only facts from the topic notes.
 
 Return ONLY this JSON:
-{"intro":"one friendly sentence","steps":[{"title":"...","text":"...","svg":"<svg ...>...</svg>"}],"check":[{"part":"...","type":"typed","prompt":"...","answer":"..."}]}`,
+{"intro":"one friendly sentence","steps":[{"title":"...","text":"...","diagram":{"kind":"flow","steps":["..."]}}],"check":[{"part":"...","type":"typed","prompt":"...","answer":"..."}]}`,
   };
 }
 
@@ -229,7 +244,7 @@ export function validLesson(l: RawLesson): boolean {
     !!l &&
     typeof l.intro === "string" &&
     Array.isArray(l.steps) &&
-    l.steps.length >= 2 &&
+    l.steps.length >= 3 &&
     l.steps.every((s) => s && typeof s.text === "string") &&
     Array.isArray(l.check)
   );
