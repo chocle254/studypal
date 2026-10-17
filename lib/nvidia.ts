@@ -99,7 +99,9 @@ export async function ask(opts: AskOptions): Promise<string> {
       });
       if (res.status === 429) {
         // Free plans limit requests per minute. Wait as long as the provider asks (up to 20s), then try again.
-        const wait = Math.min(20, Number(res.headers.get("retry-after")) || 6);
+        const asked = Number(res.headers.get("retry-after")) || 6;
+        const wait = Math.min(20, asked);
+        if (rateLimitWaits === 0) console.warn(`AI 429 (task ${opts.task}): retry-after ${asked}s · ${(await res.text()).slice(0, 300)}`);
         if (rateLimitWaits < 3) {
           rateLimitWaits++;
           console.warn(`AI rate limited (task ${opts.task}); waiting ${wait}s`);
