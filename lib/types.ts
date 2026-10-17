@@ -29,6 +29,7 @@ export interface Lesson {
 export interface Topic {
   title: string;
   key_parts: string[];
+  notes: string; // core facts from the material, used for questions and lessons
   baseline: Question[];
   final: Question[];
   lessons?: Partial<Record<Style, Lesson>>;
@@ -77,4 +78,27 @@ export interface HomeCourse {
   name: string;
   level: string;
   units: HomeUnit[];
+}
+
+// What the phone is allowed to see of a unit: no model answers.
+export interface PublicQuestion {
+  id: string;
+  type: QuestionType;
+  prompt: string;
+  options?: string[];
+}
+
+export interface PublicTopic {
+  title: string;
+  key_parts: string[];
+}
+
+export interface PublicUnit {
+  id: string;
+  name: string;
+  course: string;
+  level: string;
+  current_topic: number;
+  style: Style | null;
+  topics: PublicTopic[];
 }

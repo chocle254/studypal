@@ -8,7 +8,7 @@ import { standIn } from "./standin";
 
 const BASE = process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1";
 
-export type Task = "ping" | "analyze" | "mark" | "lesson";
+export type Task = "ping" | "analyze" | "questions" | "mark" | "lesson";
 
 export interface AskOptions {
   task: Task;
