@@ -41,7 +41,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Learner check: Open your unit and take the test. Answer some questions well and some badly on purpose. The results should show the topics you answered badly as weak.
   Commit: `Add baseline test with AI marking and results`
 
-- [ ] **4. A weak topic is taught in your chosen style**
+- [x] **4. A weak topic is taught in your chosen style**
   Becomes usable: After results, choose 5-year-old, gossip or nerd and where to start (topic one or custom topics). Weak topics are taught step by step in easy English with a real-life example and a simple drawing per step. A strong topic shows the nudge and an optional quick check.
   Why now: The second half of the kernel, teaching only the gaps. It's the riskiest output (AI drawings), so it comes right after testing.
   PRD ref: `prd.md > Teaching styles and starting point`, `prd.md > Lesson`
