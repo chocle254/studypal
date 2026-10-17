@@ -17,13 +17,18 @@ type Tables = {
 
 let client: SupabaseClient | null = null;
 
+// Accept the names we chose and the names Vercel's Supabase integration adds automatically.
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+
 export function dbMode(): "supabase" | "local" {
-  return process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY ? "supabase" : "local";
+  return SUPABASE_URL && SUPABASE_KEY ? "supabase" : "local";
 }
 
 function sb(): SupabaseClient {
   if (!client) {
-    client = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!, {
+    client = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
       auth: { persistSession: false },
     });
   }
