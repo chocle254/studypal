@@ -4,12 +4,12 @@ import { getUnit, listAttempts, updateUnit } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
 import { AIError, askJson } from "@/lib/nvidia";
 import { lessonPrompt, validLesson, toQuestions, type RawLesson } from "@/lib/prompts";
-import { cleanDiagram } from "@/lib/diagram";
+import { cleanCode, cleanDiagram } from "@/lib/diagram";
 import { splitParts } from "@/lib/parts";
 import type { Lesson, PublicLesson, Question, Style } from "@/lib/types";
 
 export const maxDuration = 180;
-const LESSON_VERSION = 2; // version 2: full-topic, in-depth lessons with structured diagrams
+const LESSON_VERSION = 3; // v3: points on their own lines, code examples for code topics
 
 // The part of the student's material that covers this topic: find the topic's title in its part, take the text from there.
 function sourceFor(material: string, part: number, title: string, max = 9000): string {
@@ -33,7 +33,12 @@ function toPublic(l: Lesson): PublicLesson {
     style: l.style,
     quick: !!l.quick,
     intro: l.intro,
-    steps: l.steps.map((s) => ({ title: s.title, text: s.text, ...(s.diagram ? { diagram: s.diagram } : {}) })),
+    steps: l.steps.map((s) => ({
+      title: s.title,
+      text: s.text,
+      ...(s.diagram ? { diagram: s.diagram } : {}),
+      ...(s.code ? { code: s.code } : {}),
+    })),
     check: l.check.map((q) => ({ id: q.id, type: q.type, prompt: q.prompt, ...(q.options ? { options: q.options } : {}) })),
   };
 }
@@ -92,7 +97,13 @@ export async function POST(req: Request) {
       intro: String(raw.intro).slice(0, 400),
       steps: raw.steps.slice(0, 10).map((s) => {
         const diagram = cleanDiagram(s.diagram);
-        return { title: String(s.title ?? "").slice(0, 80), text: String(s.text).slice(0, 2000), ...(diagram ? { diagram } : {}) };
+        const code = cleanCode(s.code);
+        return {
+          title: String(s.title ?? "").slice(0, 80),
+          text: String(s.text).slice(0, 2400),
+          ...(diagram ? { diagram } : {}),
+          ...(code ? { code } : {}),
+        };
       }),
       check: toQuestions(raw.check ?? [], `t${index}c${style[0]}`).slice(0, 3),
     };

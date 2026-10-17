@@ -24,6 +24,7 @@ export interface LessonStep {
   title: string;
   text: string;
   diagram?: Diagram; // only when a picture genuinely helps
+  code?: { language: string; code: string }; // only when a code example helps (programming topics)
   svg?: string; // older lessons only; no longer shown
 }
 

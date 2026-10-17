@@ -117,6 +117,12 @@ function standInLesson(user: string) {
     title: name,
     text: `[stand-in] ${name} of ${title}. ${parts[i % Math.max(1, parts.length)] ?? ""}. Think of it like a house: every part has a job, and this one matters because it keeps things working. Here is a second sentence. And a third one, step by step.`,
     ...(i === 2 ? { diagram: { kind: "flow", steps: parts.slice(0, 4).length >= 2 ? parts.slice(0, 4) : ["Load", "Foundation", "Ground"] } } : {}),
+    ...(i === 4
+      ? {
+          text: `[stand-in] Imagine predicting if a customer will buy. 1️⃣ Gather past data with labels. 2️⃣ Pick logistic regression. 3️⃣ Train on 80% of the data. 4️⃣ Check it on the other 20%.`,
+          code: { language: "python", code: "from sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import train_test_split\n\n# X = customer features, y = bought (1) or not (0)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)\nmodel = LogisticRegression().fit(X_train, y_train)\nprint(\"Accuracy:\", model.score(X_test, y_test))" },
+        }
+      : {}),
     ...(i === 3 ? { diagram: { kind: "parts", center: title, parts: (parts.length >= 2 ? parts : ["Part A", "Part B"]).slice(0, 4).map((p) => ({ name: p.slice(0, 30), job: "does an important job" })) } } : {}),
   }));
   return {

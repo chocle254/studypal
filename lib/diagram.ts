@@ -37,3 +37,13 @@ export function cleanDiagram(raw: unknown): Diagram | undefined {
   }
   return undefined;
 }
+
+// Checks the code example the AI suggests: a language name and a short snippet.
+export function cleanCode(raw: unknown): { language: string; code: string } | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const c = raw as Record<string, unknown>;
+  const code = typeof c.code === "string" ? c.code.replace(/\r/g, "").replace(/^\n+|\s+$/g, "").slice(0, 3000) : "";
+  if (code.split("\n").filter((l) => l.trim()).length < 1) return undefined;
+  const language = (typeof c.language === "string" ? c.language : "code").toLowerCase().replace(/[^a-z0-9+#.-]/g, "").slice(0, 20) || "code";
+  return { language, code };
+}

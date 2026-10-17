@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { getStudentId } from "@/lib/student";
 import { STYLES, type PublicLesson, type Style } from "@/lib/types";
 import Diagram from "@/components/Diagram";
+import LessonText from "@/components/LessonText";
+import CodeBlock from "@/components/CodeBlock";
 
 // A lesson for one topic, one step at a time, each with a simple drawing.
 export default function LessonView({
@@ -118,8 +120,9 @@ export default function LessonView({
         <div className="p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-muted">Step {step + 1} of {lesson.steps.length}</p>
           <p className="mt-1 text-lg font-bold">{s.title}</p>
-          <p className="mt-2 leading-relaxed">{s.text}</p>
+          <LessonText text={s.text} />
         </div>
+        {s.code && <CodeBlock language={s.code.language} code={s.code.code} />}
         {s.diagram && <Diagram d={s.diagram} />}
       </article>
 

@@ -94,6 +94,7 @@ Activity mode:
 
 ## Revisions
 
+- Lesson polish after the learner's second slice-4 check (lessons were deep enough now): steps and points show as real numbered or bullet lists (also when the AI squeezes them into one paragraph), and code topics get short code examples in a copyable code window. Lesson version 3.
 - Lessons rebuilt after the learner's slice-4 check: AI-drawn SVG pictures were meaningless, so diagrams are now structured data the app draws itself (flowchart, cycle, side-by-side comparison, a thing and its parts), used only when they help; lessons were too shallow, so they now teach the whole topic in 6–9 sections (what it is, why it matters, how it works, parts/types, a worked real-life example, common mistakes, summary) from the student's own material for that topic, not just the tested ideas; and a finished lesson leads straight to the next topic in the learning path. Older lessons are rewritten automatically (lesson version 2).
 
 - Long PDFs are read part by part: about 15 pages (22,000 characters) per part, each part becoming one round of up to 5 topics (related sections grouped so nothing is dropped). The first part is read when the unit is added; "Read the next part" reads the next one. Rounds are now defined by part (replacing fixed groups of 4). New `units.parts_read` and `units.reached_current` columns. A wrong unit can be deleted. Learner's request after a book-length PDF was only read for its first ~15 pages; most of their PDFs are 80+ pages.

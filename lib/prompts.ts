@@ -181,7 +181,7 @@ Still clear and step by step.`,
 
 export interface RawLesson {
   intro: string;
-  steps: { title: string; text: string; diagram?: unknown }[];
+  steps: { title: string; text: string; diagram?: unknown; code?: unknown }[];
   check: RawQuestion[];
 }
 
@@ -224,6 +224,11 @@ ${plan}
 Each section has:
 - "title": a few words
 - "text": 4 to 8 sentences in easy English, step by step. Use the material's real facts, names and numbers.
+  When you list steps or several points, put EACH on its own line (use "\\n" between them), starting with "1. ", "2. " …
+  for steps in order, or "- " for points without an order. Never squeeze a numbered list into one paragraph.
+- "code" (ONLY when the topic is about programming, data or maths that is done with code, and a short example helps):
+  {"language":"python","code":"..."} — a short, correct, runnable snippet (at most 25 lines) with brief comments,
+  using the libraries the material uses. Use "\\n" for new lines inside the code. Leave it out for non-code topics.
 - "diagram" (ONLY when a picture genuinely helps; otherwise leave it out). Pick ONE shape:
   {"kind":"flow","steps":["...","..."]}  for a process in order (3 to 7 short steps)
   {"kind":"cycle","steps":["...","..."]}  for a process that repeats (3 to 6 steps)
