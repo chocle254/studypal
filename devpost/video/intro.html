@@ -1,0 +1,373 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: Nunito; src: url(nunito.woff2) format("woff2"); font-weight: 200 1000; }
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #f1eee7; }
+  svg { display: block; font-family: Nunito, sans-serif; }
+</style>
+</head>
+<body>
+<svg id="s" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#2b302d" flood-opacity="0.12"/></filter>
+    <radialGradient id="glow"><stop offset="0" stop-color="#ffe9a8" stop-opacity="0.95"/><stop offset="1" stop-color="#ffe9a8" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#f1eee7"/>
+  <!-- slow drifting background blobs -->
+  <circle id="blob1" cx="300" cy="200" r="260" fill="#dfe7e2"/>
+  <circle id="blob2" cx="1680" cy="900" r="320" fill="#f1e3da"/>
+  <circle id="blob3" cx="1600" cy="160" r="150" fill="#e0e8ec"/>
+
+  <!-- ===== Scene 1-2: the student at the desk ===== -->
+  <g id="room">
+    <!-- page stack on the desk -->
+    <g id="stack"></g>
+    <!-- desk -->
+    <rect x="360" y="760" width="1200" height="34" rx="12" fill="#b98a6c"/>
+    <rect x="420" y="794" width="26" height="230" rx="8" fill="#a77a5d"/>
+    <rect x="1474" y="794" width="26" height="230" rx="8" fill="#a77a5d"/>
+
+    <!-- the student (an original character) -->
+    <g id="student" transform="translate(860 430)">
+      <!-- chair back -->
+      <rect x="-150" y="120" width="300" height="330" rx="40" fill="#8ea7b5"/>
+      <!-- body / sweater -->
+      <path d="M-120 330 Q-125 175 0 170 Q125 175 120 330 Z" fill="#6f9282"/>
+      <!-- neck -->
+      <rect x="-22" y="140" width="44" height="40" rx="14" fill="#7a4b33"/>
+      <!-- head -->
+      <g id="head">
+        <ellipse cx="0" cy="60" rx="98" ry="104" fill="#8d5a3b"/>
+        <!-- hair -->
+        <path d="M-98 50 Q-100 -45 0 -48 Q100 -45 98 50 Q85 0 40 -6 Q-10 18 -60 -2 Q-90 12 -98 50 Z" fill="#2b2420"/>
+        <!-- ears -->
+        <ellipse cx="-98" cy="70" rx="14" ry="20" fill="#7a4b33"/>
+        <ellipse cx="98" cy="70" rx="14" ry="20" fill="#7a4b33"/>
+        <!-- eyes -->
+        <g id="eyes">
+          <ellipse id="eyeL" cx="-36" cy="62" rx="11" ry="13" fill="#1f1a17"/>
+          <ellipse id="eyeR" cx="36" cy="62" rx="11" ry="13" fill="#1f1a17"/>
+        </g>
+        <!-- tired eyelids -->
+        <rect id="lidL" x="-52" y="44" width="32" height="0" fill="#8d5a3b"/>
+        <rect id="lidR" x="20" y="44" width="32" height="0" fill="#8d5a3b"/>
+        <!-- mouths -->
+        <path id="mNeutral" d="M-20 112 Q0 118 20 112" stroke="#3b221a" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <path id="mWorry" d="M-22 120 Q0 104 22 120" stroke="#3b221a" stroke-width="6" fill="none" stroke-linecap="round" opacity="0"/>
+        <path id="mSmile" d="M-28 106 Q0 136 28 106" stroke="#3b221a" stroke-width="6" fill="none" stroke-linecap="round" opacity="0"/>
+        <!-- sweat drop -->
+        <path id="sweat" d="M92 20 Q104 42 92 52 Q80 42 92 20 Z" fill="#8ec5df" opacity="0"/>
+      </g>
+      <!-- arm with highlighter -->
+      <g id="arm">
+        <path d="M70 230 Q150 260 190 320" stroke="#6f9282" stroke-width="44" fill="none" stroke-linecap="round"/>
+        <circle cx="196" cy="326" r="24" fill="#8d5a3b"/>
+        <rect x="186" y="270" width="18" height="70" rx="6" fill="#e9c94a" transform="rotate(25 196 300)"/>
+      </g>
+    </g>
+
+    <!-- open book / pdf page in front of the student -->
+    <g id="openPage" transform="translate(980 640)">
+      <rect x="0" y="0" width="230" height="120" rx="10" fill="#fbfaf6" stroke="#ddd8cc" stroke-width="3" filter="url(#soft)"/>
+      <g id="lines">
+        <rect x="20" y="20" width="190" height="10" rx="5" fill="#ddd8cc"/>
+        <rect x="20" y="42" width="170" height="10" rx="5" fill="#ddd8cc"/>
+        <rect x="20" y="64" width="186" height="10" rx="5" fill="#ddd8cc"/>
+        <rect x="20" y="86" width="120" height="10" rx="5" fill="#ddd8cc"/>
+      </g>
+      <rect id="hl1" x="18" y="18" width="0" height="14" rx="5" fill="#f2dc6b" opacity="0.75"/>
+      <rect id="hl2" x="18" y="62" width="0" height="14" rx="5" fill="#f2dc6b" opacity="0.75"/>
+    </g>
+
+    <!-- page counter -->
+    <g id="counter" opacity="0">
+      <rect x="1180" y="180" width="380" height="110" rx="26" fill="#fbfaf6" filter="url(#soft)"/>
+      <text x="1370" y="228" text-anchor="middle" font-size="30" font-weight="800" fill="#6d746f">READING…</text>
+      <text id="counterText" x="1370" y="272" text-anchor="middle" font-size="40" font-weight="900" fill="#2b302d">Page 1 of 64</text>
+    </g>
+
+    <!-- zzz -->
+    <g id="zzz" opacity="0" font-weight="900" fill="#8ea7b5">
+      <text x="1010" y="380" font-size="44">z</text>
+      <text x="1050" y="340" font-size="56">z</text>
+      <text x="1100" y="290" font-size="70">Z</text>
+    </g>
+
+    <!-- question marks -->
+    <g id="qs" font-weight="900" fill="#c48f72">
+      <text id="q1" x="700" y="360" font-size="90" opacity="0">?</text>
+      <text id="q2" x="980" y="320" font-size="120" opacity="0">?</text>
+      <text id="q3" x="1080" y="400" font-size="80" opacity="0">?</text>
+    </g>
+
+    <!-- exam paper -->
+    <g id="exam" transform="translate(1180 160)" opacity="0">
+      <rect width="400" height="520" rx="22" fill="#fbfaf6" filter="url(#soft)"/>
+      <text x="200" y="74" text-anchor="middle" font-size="44" font-weight="900" fill="#2b302d">EXAM</text>
+      <rect x="40" y="110" width="320" height="4" rx="2" fill="#ddd8cc"/>
+      <text x="40" y="180" font-size="30" font-weight="800" fill="#2b302d">1. Explain why…</text>
+      <rect x="40" y="206" width="320" height="56" rx="10" fill="#f1eee7"/>
+      <text x="40" y="320" font-size="30" font-weight="800" fill="#2b302d">2. How does…</text>
+      <rect x="40" y="346" width="320" height="56" rx="10" fill="#f1eee7"/>
+      <text id="examQ" x="200" y="248" text-anchor="middle" font-size="40" font-weight="900" fill="#c48f72" opacity="0">? ? ?</text>
+    </g>
+
+    <!-- laptop with an AI chat -->
+    <g id="laptop" transform="translate(1160 360)" opacity="0">
+      <rect x="0" y="0" width="460" height="300" rx="20" fill="#2b302d"/>
+      <rect x="16" y="16" width="428" height="268" rx="10" fill="#fbfaf6"/>
+      <rect x="-30" y="300" width="520" height="26" rx="10" fill="#4a524d"/>
+      <rect x="36" y="34" width="220" height="40" rx="14" fill="#e0e8ec"/>
+      <text x="52" y="61" font-size="20" font-weight="800" fill="#2b302d">Write my essay</text>
+      <g id="essay">
+        <rect class="el" x="36" y="92" width="0" height="12" rx="6" fill="#6f9282"/>
+        <rect class="el" x="36" y="116" width="0" height="12" rx="6" fill="#6f9282"/>
+        <rect class="el" x="36" y="140" width="0" height="12" rx="6" fill="#6f9282"/>
+        <rect class="el" x="36" y="164" width="0" height="12" rx="6" fill="#6f9282"/>
+        <rect class="el" x="36" y="188" width="0" height="12" rx="6" fill="#6f9282"/>
+        <rect class="el" x="36" y="212" width="0" height="12" rx="6" fill="#6f9282"/>
+      </g>
+      <g id="done" opacity="0">
+        <rect x="250" y="236" width="180" height="36" rx="18" fill="#6f9282"/>
+        <text x="340" y="261" text-anchor="middle" font-size="20" font-weight="900" fill="#fbfaf6">✓ Done in 2s</text>
+      </g>
+    </g>
+
+    <!-- thought bubble -->
+    <g id="thought" opacity="0">
+      <circle cx="1000" cy="330" r="14" fill="#fbfaf6" filter="url(#soft)"/>
+      <circle cx="1030" cy="285" r="22" fill="#fbfaf6" filter="url(#soft)"/>
+      <rect x="1000" y="120" width="380" height="140" rx="60" fill="#fbfaf6" filter="url(#soft)"/>
+      <text x="1190" y="182" text-anchor="middle" font-size="40" font-weight="900" fill="#2b302d">But did I</text>
+      <text x="1190" y="230" text-anchor="middle" font-size="40" font-weight="900" fill="#c48f72">learn it?</text>
+    </g>
+  </g>
+
+  <!-- ===== Scene 3: information is not understanding ===== -->
+  <g id="split" opacity="0">
+    <g id="leftCard">
+      <rect x="230" y="260" width="600" height="520" rx="40" fill="#fbfaf6" filter="url(#soft)"/>
+      <!-- icons: document, search, chat -->
+      <g id="icons">
+        <g class="ic" transform="translate(330 360)">
+          <rect width="110" height="140" rx="14" fill="#e0e8ec"/><rect x="20" y="30" width="70" height="10" rx="5" fill="#8ea7b5"/><rect x="20" y="54" width="60" height="10" rx="5" fill="#8ea7b5"/><rect x="20" y="78" width="70" height="10" rx="5" fill="#8ea7b5"/>
+        </g>
+        <g class="ic" transform="translate(475 360)">
+          <circle cx="50" cy="55" r="40" fill="none" stroke="#8ea7b5" stroke-width="14"/><rect x="78" y="88" width="16" height="50" rx="8" fill="#8ea7b5" transform="rotate(-45 86 113)"/>
+        </g>
+        <g class="ic" transform="translate(620 370)">
+          <rect width="120" height="90" rx="22" fill="#e0e8ec"/><path d="M30 90 L20 124 L60 90 Z" fill="#e0e8ec"/><circle cx="35" cy="45" r="8" fill="#8ea7b5"/><circle cx="60" cy="45" r="8" fill="#8ea7b5"/><circle cx="85" cy="45" r="8" fill="#8ea7b5"/>
+        </g>
+      </g>
+      <text x="530" y="620" text-anchor="middle" font-size="52" font-weight="900" fill="#2b302d">Accessing</text>
+      <text x="530" y="684" text-anchor="middle" font-size="52" font-weight="900" fill="#2b302d">information</text>
+    </g>
+    <g id="neq">
+      <circle cx="960" cy="520" r="78" fill="#c48f72"/>
+      <text x="960" y="560" text-anchor="middle" font-size="120" font-weight="900" fill="#fbfaf6">≠</text>
+    </g>
+    <g id="rightCard">
+      <rect x="1090" y="260" width="600" height="520" rx="40" fill="#fbfaf6" filter="url(#soft)"/>
+      <circle id="bulbGlow" cx="1390" cy="430" r="150" fill="url(#glow)" opacity="0"/>
+      <g transform="translate(1390 430)">
+        <circle cx="0" cy="0" r="72" fill="#f4d774" id="bulb"/>
+        <rect x="-34" y="62" width="68" height="40" rx="10" fill="#6d746f"/>
+        <rect x="-26" y="104" width="52" height="14" rx="7" fill="#6d746f"/>
+        <path d="M-22 10 Q0 -30 22 10" stroke="#fbfaf6" stroke-width="8" fill="none" stroke-linecap="round"/>
+      </g>
+      <text x="1390" y="652" text-anchor="middle" font-size="52" font-weight="900" fill="#6f9282">Understanding</text>
+    </g>
+  </g>
+
+  <!-- ===== Scene 4: the problem ===== -->
+  <g id="problem" opacity="0">
+    <text id="probText" x="960" y="560" text-anchor="middle" font-size="120" font-weight="900" fill="#2b302d">That's the problem.</text>
+    <rect id="probLine" x="560" y="600" width="0" height="16" rx="8" fill="#c48f72"/>
+  </g>
+
+  <!-- ===== Scene 5: meet Study Pal ===== -->
+  <g id="meet" opacity="0">
+    <g id="logo" transform="translate(960 400)">
+      <circle r="120" fill="#6f9282"/>
+      <!-- an open book with a spark: the Study Pal mark -->
+      <path d="M-62 -18 Q-30 -36 0 -16 Q30 -36 62 -18 L62 46 Q30 28 0 48 Q-30 28 -62 46 Z" fill="#fbfaf6"/>
+      <path d="M0 -16 L0 48" stroke="#6f9282" stroke-width="6"/>
+      <path d="M48 -66 L56 -48 L74 -42 L56 -36 L48 -18 L40 -36 L22 -42 L40 -48 Z" fill="#f4d774"/>
+    </g>
+    <text id="brand" x="960" y="640" text-anchor="middle" font-size="120" font-weight="900" fill="#2b302d">Study <tspan fill="#6f9282">Pal</tspan></text>
+    <g id="pills" font-size="34" font-weight="800">
+      <g class="pill"><rect x="470" y="720" width="300" height="70" rx="35" fill="#f1e3da"/><text x="620" y="766" text-anchor="middle" fill="#2b302d">Test first</text></g>
+      <g class="pill"><rect x="810" y="720" width="300" height="70" rx="35" fill="#dfe7e2"/><text x="960" y="766" text-anchor="middle" fill="#2b302d">Teach the gaps</text></g>
+      <g class="pill"><rect x="1150" y="720" width="300" height="70" rx="35" fill="#e0e8ec"/><text x="1300" y="766" text-anchor="middle" fill="#2b302d">See your growth</text></g>
+    </g>
+  </g>
+
+  <!-- ===== Scene 6: into the phone ===== -->
+  <g id="phone" opacity="0">
+    <rect x="-210" y="-430" width="420" height="860" rx="60" fill="#2b302d"/>
+    <rect x="-192" y="-412" width="384" height="824" rx="46" fill="#f1eee7"/>
+    <rect x="-60" y="-398" width="120" height="22" rx="11" fill="#2b302d"/>
+    <text x="-150" y="-320" font-size="34" font-weight="900" fill="#2b302d">Study <tspan fill="#6f9282">Pal</tspan></text>
+    <rect x="-150" y="-270" width="300" height="200" rx="26" fill="#dfe7e2"/>
+    <rect x="-150" y="-50" width="140" height="160" rx="22" fill="#f1e3da"/>
+    <rect x="10" y="-50" width="140" height="160" rx="22" fill="#e0e8ec"/>
+    <rect x="-150" y="130" width="300" height="70" rx="22" fill="#6f9282"/>
+  </g>
+
+  <!-- fade to page colour at the very end -->
+  <rect id="curtain" width="1920" height="1080" fill="#f1eee7" opacity="0"/>
+</svg>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = (x) => { x = clamp(x); const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+// 0→1 between a and b
+const p = (t, a, b) => clamp((t - a) / (b - a));
+// visible window with fades
+const win = (t, a, b, f = 0.5) => Math.min(ease(p(t, a, a + f)), 1 - ease(p(t, b - f, b)));
+const set = (id, attrs) => { const el = typeof id === "string" ? $(id) : id; for (const k in attrs) el.setAttribute(k, attrs[k]); };
+
+// build the page stack once
+const stack = $("stack");
+for (let i = 0; i < 26; i++) {
+  const r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  set(r, { x: 470 + (i % 3) * 3, y: 0, width: 260, height: 14, rx: 4, fill: i % 2 ? "#fbfaf6" : "#f4f1ea", stroke: "#ddd8cc", "stroke-width": 2 });
+  stack.appendChild(r);
+}
+
+// Timeline (seconds), matched to the voice-over:
+// 1.5–13.9 reading the PDF · 13.9–22.7 AI essay · 22.7–30.5 info ≠ understanding
+// 30.5–34.6 the problem · 34.6–42.8 meet Study Pal · 42.8–45.4 into the phone
+function render(t) {
+  // background drift
+  set("blob1", { cx: 300 + Math.sin(t / 5) * 40, cy: 200 + Math.cos(t / 6) * 30 });
+  set("blob2", { cx: 1680 + Math.cos(t / 7) * 50, cy: 900 + Math.sin(t / 5) * 30 });
+  set("blob3", { cx: 1600 + Math.sin(t / 4) * 30 });
+
+  // ---- room (scenes 1–2) ----
+  const roomOn = 1 - ease(p(t, 22.3, 23.1));
+  const roomIn = ease(p(t, 0, 0.8));
+  $("room").setAttribute("opacity", Math.min(roomIn, roomOn));
+  $("room").setAttribute("transform", `translate(0 ${(1 - roomIn) * 40})`);
+
+  // page stack grows while reading (1.5–9), pages count up
+  const grow = ease(p(t, 1.2, 9));
+  const pages = Math.round(grow * 26);
+  [...stack.children].forEach((r, i) => {
+    const on = i < pages;
+    const drop = clamp((grow * 26 - i) * 1.5);
+    r.setAttribute("y", 746 - i * 15 - (1 - drop) * 60);
+    r.setAttribute("opacity", on ? drop : 0);
+  });
+  const cOn = win(t, 2.0, 9.6, 0.4);
+  $("counter").setAttribute("opacity", cOn);
+  $("counterText").textContent = `Page ${Math.max(1, Math.round(1 + p(t, 2, 9) * 63))} of 64`;
+
+  // highlighter strokes ("read, reread, highlight")
+  set("hl1", { width: 192 * ease(p(t, 3.2, 4.2)) });
+  set("hl2", { width: 190 * ease(p(t, 6.4, 7.4)) });
+  const scribble = t > 3 && t < 7.6 ? Math.sin(t * 14) * 8 : 0;
+  $("arm").setAttribute("transform", `rotate(${scribble} 70 230)`);
+
+  // tiredness: eyelids droop, head nods, zzz (6–9.2)
+  const tired = win(t, 6.0, 9.4, 0.6);
+  set("lidL", { height: 22 * tired }); set("lidR", { height: 22 * tired });
+  const nod = tired * (6 + Math.sin(t * 2.4) * 5);
+  // worry / happy expressions
+  const worry = win(t, 9.4, 13.9, 0.3) + win(t, 19.2, 22.6, 0.3);
+  const happy = win(t, 15.6, 19.2, 0.3);
+  $("mWorry").setAttribute("opacity", worry);
+  $("mSmile").setAttribute("opacity", happy);
+  $("mNeutral").setAttribute("opacity", 1 - Math.max(worry, happy));
+  $("sweat").setAttribute("opacity", win(t, 10.2, 13.8, 0.3));
+  $("head").setAttribute("transform", `rotate(${nod + (worry ? Math.sin(t * 9) * 1.5 * worry : 0)} 0 150)`);
+  $("zzz").setAttribute("opacity", win(t, 6.6, 9.4, 0.4));
+  $("zzz").setAttribute("transform", `translate(0 ${-((t * 30) % 40)})`);
+
+  // blink every ~3s (not while tired)
+  const bl = (t % 3.1) < 0.12 ? 0.1 : 1;
+  set("eyeL", { ry: 13 * bl }); set("eyeR", { ry: 13 * bl });
+
+  // the exam arrives (9.4) with question marks
+  const ex = back(p(t, 9.4, 10.2)) * (1 - ease(p(t, 13.5, 14.0)));
+  $("exam").setAttribute("opacity", clamp(ex));
+  $("exam").setAttribute("transform", `translate(${1180 + (1 - clamp(ex)) * 300} 160)`);
+  $("examQ").setAttribute("opacity", win(t, 10.6, 13.8, 0.3));
+  ["q1", "q2", "q3"].forEach((id, i) => {
+    const a = 10.4 + i * 0.35;
+    const o = win(t, a, 13.8, 0.25);
+    $(id).setAttribute("opacity", o);
+    $(id).setAttribute("transform", `translate(0 ${-Math.sin((t - a) * 3) * 10})`);
+  });
+
+  // the AI laptop (13.9–22.4): essay types itself in seconds
+  const lp = back(p(t, 14.0, 14.8)) * (1 - ease(p(t, 22.0, 22.6)));
+  $("laptop").setAttribute("opacity", clamp(lp));
+  $("laptop").setAttribute("transform", `translate(${1160 + (1 - clamp(lp)) * 300} 360)`);
+  [...document.querySelectorAll(".el")].forEach((r, i) => {
+    const w = [380, 360, 390, 340, 370, 200][i];
+    r.setAttribute("width", w * ease(p(t, 15.0 + i * 0.18, 15.25 + i * 0.18)));
+  });
+  $("done").setAttribute("opacity", win(t, 16.3, 22.4, 0.3));
+  const th = back(p(t, 19.0, 19.7)) * (1 - ease(p(t, 22.0, 22.5)));
+  $("thought").setAttribute("opacity", clamp(th));
+  $("thought").setAttribute("transform", `translate(${(1 - clamp(th)) * -40} ${(1 - clamp(th)) * 30})`);
+  // move the open page away while the laptop is out
+  $("openPage").setAttribute("opacity", 1 - ease(p(t, 13.6, 14.2)));
+
+  // ---- scene 3: accessing information ≠ understanding (22.7–30.3) ----
+  const sp = win(t, 22.8, 30.4, 0.5);
+  $("split").setAttribute("opacity", sp);
+  const L = back(p(t, 22.9, 23.6)), R = back(p(t, 26.3, 27.0));
+  $("leftCard").setAttribute("transform", `translate(${(1 - clamp(L)) * -200} 0)`);
+  $("leftCard").setAttribute("opacity", clamp(L));
+  [...document.querySelectorAll(".ic")].forEach((g, i) => {
+    const k = back(p(t, 23.4 + i * 0.25, 24.0 + i * 0.25));
+    const base = g.getAttribute("data-base") || g.getAttribute("transform");
+    g.setAttribute("data-base", base);
+    g.setAttribute("transform", `${base} translate(0 ${Math.sin(t * 2 + i) * 6 + (1 - clamp(k)) * 40})`);
+    g.setAttribute("opacity", clamp(k));
+  });
+  const nq = back(p(t, 24.8, 25.4));
+  $("neq").setAttribute("transform", `translate(960 520) scale(${Math.max(0.001, nq)}) translate(-960 -520)`);
+  $("rightCard").setAttribute("transform", `translate(${(1 - clamp(R)) * 200} 0)`);
+  $("rightCard").setAttribute("opacity", clamp(R));
+  $("bulbGlow").setAttribute("opacity", ease(p(t, 27.4, 28.4)) * (0.75 + Math.sin(t * 3) * 0.25));
+
+  // ---- scene 4: that's the problem (30.5–34.4) ----
+  const pr = win(t, 30.5, 34.5, 0.4);
+  $("problem").setAttribute("opacity", pr);
+  const ps = 0.9 + 0.1 * back(p(t, 30.5, 31.2));
+  $("probText").setAttribute("transform", `translate(960 540) scale(${ps}) translate(-960 -540)`);
+  set("probLine", { width: 800 * ease(p(t, 31.4, 32.4)) });
+
+  // ---- scene 5: meet Study Pal (34.6–42.6) ----
+  const mt = win(t, 34.6, 42.9, 0.4);
+  $("meet").setAttribute("opacity", mt);
+  const lg = back(p(t, 34.7, 35.5));
+  $("logo").setAttribute("transform", `translate(960 ${400 + Math.sin(t * 1.6) * 6}) scale(${Math.max(0.001, lg)}) rotate(${(1 - clamp(lg)) * -40})`);
+  const br = ease(p(t, 35.4, 36.2));
+  $("brand").setAttribute("opacity", br);
+  $("brand").setAttribute("transform", `translate(0 ${(1 - br) * 30})`);
+  [...document.querySelectorAll(".pill")].forEach((g, i) => {
+    const k = back(p(t, 37.6 + i * 0.6, 38.2 + i * 0.6));
+    g.setAttribute("opacity", clamp(k));
+    g.setAttribute("transform", `translate(0 ${(1 - clamp(k)) * 30})`);
+  });
+
+  // ---- scene 6: into the phone (42.8–45.4) ----
+  const ph = back(p(t, 42.8, 43.6));
+  const zoom = ease(p(t, 44.3, 45.3));
+  $("phone").setAttribute("opacity", clamp(ph * 3));
+  $("phone").setAttribute("transform", `translate(960 ${540 + (1 - clamp(ph)) * 500}) scale(${0.95 + zoom * 1.6})`);
+  $("curtain").setAttribute("opacity", ease(p(t, 44.9, 45.4)));
+}
+window.render = render;
+render(0);
+</script>
+</body>
+</html>

@@ -4,7 +4,9 @@ import { getStudentId } from "./student";
 // Pick short, fact-like sentences from the student's own notes to show while they wait.
 export function pickFacts(text: string, max = 12): string[] {
   // Split on line breaks first so headings don't glue onto the next sentence.
+  // PDF text breaks lines mid-sentence: join a line to the next when the next starts in lower case.
   const sentences = text
+    .replace(/\n(?=[a-z(,])/g, " ")
     .split(/\n+/)
     .flatMap((line) => line.replace(/\s+/g, " ").split(/(?<=[.!?])\s+/))
     .map((s) => s.trim())

@@ -1,0 +1,19 @@
+Imagine studying for an exam using a PDF with dozens of pages. You read, reread, and highlight your notes, but when the exam comes, you realize you don't fully understand what you studied.
+Now imagine using AI. You can generate an essay in seconds, but if you never understand the content, have you actually learned anything?
+AI has made accessing information easier than ever, but accessing information isn't the same as understanding it.
+That's the problem StudyPal is built to address.
+Meet StudyPal, an AI-powered learning companion designed to help students move beyond simply reading or copying answers.
+Let's see how it works.
+First, the student uploads their study material. StudyPal analyzes the content and organizes it into manageable topics, making lengthy study materials easier to approach.
+Before teaching begins, StudyPal assesses what the student already knows through an initial test. It evaluates answers based on their meaning, rather than requiring students to use exact textbook wording.
+Using those results, it identifies weaker topics and helps the student choose a learning style.
+StudyPal then generates a lesson with explanations and visual aids, breaking down difficult concepts into simpler steps.
+And learning doesn't stop at reading. Students answer quick questions, receive feedback, and can ask follow-up questions when something isn't clear.
+Once they've worked through their learning path, they take a final test with new questions covering the same concepts.
+If a student still struggles with a topic, StudyPal can explain it another way and provide another opportunity to practise.
+The result is a learning experience focused on understanding, not just producing answers.
+StudyPal compares a student's performance before and after learning, helping them see where they've improved and which topics still need attention.
+Our goal isn't to replace teachers or make students dependent on AI. It's to use AI to make independent learning more engaging, personalized, and effective.
+Because the future of AI in education shouldn't just be about getting answers faster.
+It should be about helping students understand those answers.
+This is StudyPal: learn smarter, understand deeper.
