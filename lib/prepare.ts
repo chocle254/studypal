@@ -3,9 +3,10 @@ import { getStudentId } from "./student";
 
 // Pick short, fact-like sentences from the student's own notes to show while they wait.
 export function pickFacts(text: string, max = 12): string[] {
+  // Split on line breaks first so headings don't glue onto the next sentence.
   const sentences = text
-    .replace(/\s+/g, " ")
-    .split(/(?<=[.!?])\s+/)
+    .split(/\n+/)
+    .flatMap((line) => line.replace(/\s+/g, " ").split(/(?<=[.!?])\s+/))
     .map((s) => s.trim())
     .filter((s) => {
       const words = s.split(" ").length;

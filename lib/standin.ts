@@ -79,6 +79,9 @@ function standInQuestions(user: string) {
 }
 
 export async function standIn(opts: AskOptions): Promise<string> {
+  // Optional pretend "thinking time", to try the waiting screens locally.
+  const delay = Number(process.env.STANDIN_DELAY_MS || 0);
+  if (delay && opts.task !== "ping") await new Promise((r) => setTimeout(r, delay));
   switch (opts.task) {
     case "ping":
       return "OK";
