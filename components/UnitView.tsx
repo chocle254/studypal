@@ -13,10 +13,11 @@ import TestView from "@/components/TestView";
 import Results, { learningPlan, STRONG } from "@/components/Results";
 import LearnSetup from "@/components/LearnSetup";
 import LessonView from "@/components/LessonView";
+import ScoreCompare from "@/components/ScoreCompare";
 import { STYLES, type Style } from "@/lib/types";
 
 // The unit screen: the rounds read so far, each with its topics.
-// The test flow is added in slice 3.
+// Each round: baseline test → lessons with a check each → final test → before-and-after, then the next part.
 export default function UnitView() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function UnitView() {
   const [done, setDone] = useState<Set<number>>(new Set());
   const [prepError, setPrepError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [testing, setTesting] = useState(false);
+  const [testing, setTesting] = useState<false | "baseline" | "final">(false);
   const [lesson, setLesson] = useState<{ topic: number; quick: boolean } | null>(null);
   const [changingStyle, setChangingStyle] = useState(false);
 
@@ -135,6 +136,22 @@ export default function UnitView() {
   const planForRound = (unit.plan ?? []).filter((i) => roundIdx.includes(i));
   const needsSetup = baselineComplete && (changingStyle || (!allStrong && (!unit.style || planForRound.length === 0)));
 
+  // A topic in the path is finished once its lesson check is done. The final test unlocks when all are finished.
+  const checked = (i: number) => unit.progress[i]?.check !== undefined;
+  const pathLeft = planForRound.filter((i) => !checked(i));
+  const finalDone = roundIdx.filter((n) => unit.progress[n]?.final !== undefined);
+  const roundFinished = roundIdx.length > 0 && finalDone.length === roundIdx.length;
+  const finishedRounds = Array.from({ length: rounds }, (_, r) => r)
+    .filter((r) => roundTopics(r, unit.topics).every((n) => unit.progress[n]?.final !== undefined))
+    .reverse();
+  const compareFor = (r: number) =>
+    roundTopics(r, unit.topics).map((n) => ({
+      index: n,
+      title: unit.topics[n].title,
+      before: unit.progress[n]?.baseline ?? 0,
+      after: unit.progress[n]?.final ?? 0,
+    }));
+
   // The next topic in the learning path after the one being taught (lessons flow straight into each other).
   const nextInPath = lesson && !lesson.quick ? planForRound[planForRound.indexOf(lesson.topic) + 1] : undefined;
 
@@ -172,8 +189,8 @@ export default function UnitView() {
       <TestView
         unitId={unit.id}
         round={currentRound}
-        kind="baseline"
-        alreadyDone={baselineDone}
+        kind={testing}
+        alreadyDone={testing === "final" ? finalDone : baselineDone}
         onFinished={async () => {
           await load();
           setTesting(false);
@@ -212,7 +229,9 @@ export default function UnitView() {
         {unit.pages_read ? ` · pages ${unit.pages_read} read` : unit.parts_total > 1 ? ` · part ${unit.parts_read} of ${unit.parts_total} read` : ""}
       </p>
 
-      {baselineComplete && <Results topics={roundResults} />}
+      {roundFinished && <ScoreCompare round={currentRound} topics={compareFor(currentRound)} />}
+
+      {baselineComplete && !roundFinished && <Results topics={roundResults} />}
 
       {needsSetup && (
         <LearnSetup
@@ -237,16 +256,23 @@ export default function UnitView() {
           {planForRound.length > 0 && (
             <ol className="mt-3 space-y-2">
               {planForRound.map((i, n) => {
-                const learned = unit.style ? unit.lessons[i]?.includes(unit.style) : false;
+                const learned = checked(i);
+                const started = unit.style ? unit.lessons[i]?.includes(unit.style) : false;
                 return (
                   <li key={i} className="flex items-center gap-3">
                     <span className={`w-7 h-7 shrink-0 rounded-full grid place-items-center text-sm font-bold ${learned ? "bg-sage text-bg" : "bg-clay-soft"}`}>
                       {learned ? "✓" : n + 1}
                     </span>
-                    <span className="flex-1 text-sm font-semibold">{unit.topics[i].title}</span>
+                    <span className="flex-1 text-sm font-semibold">
+                      {unit.topics[i].title}
+                      {learned && (
+                        <span className="block text-xs font-normal text-muted">Check: {Math.round((unit.progress[i]?.check ?? 0) * 100)}%</span>
+                      )}
+                      {!learned && started && <span className="block text-xs font-normal text-muted">Check not done yet</span>}
+                    </span>
                     <button onClick={() => setLesson({ topic: i, quick: false })}
                       className={`rounded-lg px-3 py-1.5 text-sm font-bold ${learned ? "border border-line" : "bg-sage text-bg"}`}>
-                      {learned ? "Again" : "Learn"}
+                      {learned ? "Again" : started ? "Continue" : "Learn"}
                     </button>
                   </li>
                 );
@@ -265,6 +291,32 @@ export default function UnitView() {
           ))}
         </div>
       )}
+
+      {baselineComplete && !needsSetup && !roundFinished && (
+        pathLeft.length === 0 ? (
+          <div className="mt-6 rounded-2xl bg-clay-soft p-4 animate-rise">
+            <p className="font-bold">{finalDone.length ? "Carry on with your final test" : "Ready for the final test"}</p>
+            <p className="mt-1 text-sm text-muted">
+              Same topics as your first test, new questions. Then you&apos;ll see your before and after.
+            </p>
+            <button onClick={() => setTesting("final")}
+              className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
+              {finalDone.length ? `Continue (${finalDone.length}/${roundIdx.length} done)` : "Start the final test"}
+            </button>
+          </div>
+        ) : (
+          <p className="mt-4 rounded-xl border border-dashed border-line px-4 py-3 text-sm text-muted">
+            🔒 The final test unlocks after {pathLeft.length === 1 ? "1 more lesson and its check" : `${pathLeft.length} more lessons and their checks`}.
+          </p>
+        )
+      )}
+
+      {finishedRounds.filter((r) => r !== currentRound).map((r) => (
+        <details key={r} className="mt-4 rounded-2xl border border-line px-4 py-3">
+          <summary className="text-sm font-semibold">Round {r + 1} results</summary>
+          <ScoreCompare round={r} topics={compareFor(r)} />
+        </details>
+      ))}
 
       {Array.from({ length: rounds }, (_, r) => (
         <div key={r} className="mt-5">
@@ -316,7 +368,7 @@ export default function UnitView() {
             {roundIdx.length} topic{roundIdx.length === 1 ? "" : "s"}, 5 questions each. Answer in your own words; Study Pal
             marks by meaning, not exact wording.
           </p>
-          <button onClick={() => setTesting(true)}
+          <button onClick={() => setTesting("baseline")}
             className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
             {baselineDone.length ? `Continue (${baselineDone.length}/${roundIdx.length} done)` : "Start the test"}
           </button>
@@ -326,10 +378,16 @@ export default function UnitView() {
       {unit.can_read_more && notReady === 0 && (
         <div className="mt-4 rounded-2xl border border-line p-4 text-sm">
           <p className="font-semibold">There&apos;s more in your PDF.</p>
-          <p className="mt-1 text-muted">Study Pal reads about 15 pages per round. When you finish this round, read the next part.</p>
-          <button onClick={readNext} className="mt-3 w-full rounded-xl border border-sage text-sage font-bold py-3 active:scale-[0.98] transition">
-            Read the next part
-          </button>
+          {roundFinished ? (
+            <>
+              <p className="mt-1 text-muted">Round {currentRound + 1} is done. Read the next part (about 15 pages) to start round {currentRound + 2}.</p>
+              <button onClick={readNext} className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
+                Read the next part
+              </button>
+            </>
+          ) : (
+            <p className="mt-1 text-muted">🔒 Study Pal reads about 15 pages per round. Finish this round&apos;s final test to unlock the next part.</p>
+          )}
         </div>
       )}
 

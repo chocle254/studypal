@@ -6,6 +6,7 @@ import { STYLES, type PublicLesson, type Style } from "@/lib/types";
 import Diagram from "@/components/Diagram";
 import LessonText from "@/components/LessonText";
 import CodeBlock from "@/components/CodeBlock";
+import TopicCheck from "@/components/TopicCheck";
 
 // A lesson for one topic, one step at a time, each with a simple drawing.
 export default function LessonView({
@@ -35,6 +36,7 @@ export default function LessonView({
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [tip, setTip] = useState(0);
+  const [checking, setChecking] = useState(false);
 
   async function fetchLesson() {
     setError(null);
@@ -96,6 +98,29 @@ export default function LessonView({
     );
   }
 
+  const nextLabel = nextTitle && onNext ? `Next topic: ${nextTitle} →` : "Done — back to my unit";
+  const goOn = () => (nextTitle && onNext ? onNext() : onDone());
+
+  if (checking && lesson.check.length) {
+    return (
+      <>
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-sm text-muted">{title}</p>
+          <button onClick={onExit} className="text-sm text-muted underline underline-offset-4">Close</button>
+        </div>
+        <TopicCheck
+          unitId={unitId}
+          topic={topic}
+          style={style}
+          questions={lesson.check}
+          nextLabel={nextLabel}
+          onNext={goOn}
+          onBack={() => setChecking(false)}
+        />
+      </>
+    );
+  }
+
   const s = lesson.steps[step];
   const last = step === lesson.steps.length - 1;
 
@@ -147,13 +172,19 @@ export default function LessonView({
         </div>
       ) : (
         <div className="mt-4 space-y-2">
-          {nextTitle && onNext ? (
-            <button onClick={onNext} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
-              Next topic: {nextTitle} →
+          {lesson.check.length > 0 && !lesson.quick ? (
+            <button
+              onClick={() => {
+                setChecking(true);
+                window.scrollTo({ top: 0 });
+              }}
+              className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition"
+            >
+              Check what you learned →
             </button>
           ) : (
-            <button onClick={onDone} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
-              Done — back to my unit
+            <button onClick={goOn} className="w-full rounded-xl bg-sage text-bg py-3.5 font-bold active:scale-[0.98] transition">
+              {nextLabel}
             </button>
           )}
           <button onClick={() => setStep((n) => Math.max(0, n - 1))} className="w-full rounded-xl border border-line py-3 font-semibold">

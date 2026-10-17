@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     if (!unit || !topic) return Response.json({ error: "Not found." }, { status: 404 });
 
     const saved = topic.lessons?.[style];
-    if (saved && saved.v === LESSON_VERSION && (!!saved.quick === quick || !quick)) {
+    if (saved && saved.v === LESSON_VERSION && (!saved.quick || quick)) {
       return Response.json({ lesson: toPublic(saved), cached: true });
     }
 

@@ -2,11 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import Pomodoro from "@/components/Pomodoro";
+import { clock, usePomodoro } from "@/lib/pomodoro";
 
 // Top navbar: burger (courses) on the far left; pomodoro and avatar on the far right.
-// The courses dropdown, timer and profile are completed in slice 6.
+// The pomodoro button shows the live time and opens the timer panel.
+// The courses dropdown and profile are completed in slice 6.
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [timerOpen, setTimerOpen] = useState(false);
+  const p = usePomodoro();
 
   return (
     <header className="sticky top-0 z-20 bg-bg/90 backdrop-blur border-b border-line">
@@ -15,7 +20,10 @@ export default function Navbar() {
           <button
             aria-label="Courses"
             aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() => {
+              setMenuOpen((o) => !o);
+              setTimerOpen(false);
+            }}
             className="w-10 h-10 -ml-2 grid place-items-center rounded-xl active:bg-sage-soft"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -30,13 +38,20 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           <button
             aria-label="Pomodoro focus timer"
-            className="h-9 px-3 rounded-full bg-clay-soft text-ink text-sm font-semibold flex items-center gap-1.5 active:scale-95 transition"
+            aria-expanded={timerOpen}
+            onClick={() => {
+              setTimerOpen((o) => !o);
+              setMenuOpen(false);
+            }}
+            className={`h-9 px-3 rounded-full text-sm font-semibold flex items-center gap-1.5 active:scale-95 transition tabular-nums ${
+              p.running ? (p.mode === "focus" ? "bg-clay text-bg" : "bg-sage text-bg") : "bg-clay-soft text-ink"
+            }`}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <circle cx="12" cy="13" r="8" />
               <path d="M12 9v4l2.5 2M9 2h6" />
             </svg>
-            25:00
+            {clock(p.left)}
           </button>
           <Link
             href="/profile"
@@ -50,6 +65,8 @@ export default function Navbar() {
           </Link>
         </div>
       </nav>
+
+      {timerOpen && <Pomodoro p={p} onClose={() => setTimerOpen(false)} />}
 
       {menuOpen && (
         <div className="max-w-xl mx-auto px-4 pb-3 animate-rise">

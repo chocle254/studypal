@@ -94,6 +94,7 @@ Activity mode:
 
 ## Revisions
 
+- Slice 5 settled with the learner: the final test runs per round (not per unit), unlocks only after every lesson in the path has its check done (no skipping, so before-and-after stays honest), covers all of the round's topics including strong ones, and "Read the next part" unlocks after the round's before-and-after. The pomodoro timer (25/5, chime, keeps time across pages) was pulled forward from slice 6 at the learner's request; the courses menu and profile remain in slice 6. Also fixed: a quick brush-through lesson could be served in place of a full lesson.
 - Lesson polish after the learner's second slice-4 check (lessons were deep enough now): steps and points show as real numbered or bullet lists (also when the AI squeezes them into one paragraph), and code topics get short code examples in a copyable code window. Lesson version 3.
 - Lessons rebuilt after the learner's slice-4 check: AI-drawn SVG pictures were meaningless, so diagrams are now structured data the app draws itself (flowchart, cycle, side-by-side comparison, a thing and its parts), used only when they help; lessons were too shallow, so they now teach the whole topic in 6–9 sections (what it is, why it matters, how it works, parts/types, a worked real-life example, common mistakes, summary) from the student's own material for that topic, not just the tested ideas; and a finished lesson leads straight to the next topic in the learning path. Older lessons are rewritten automatically (lesson version 2).
 

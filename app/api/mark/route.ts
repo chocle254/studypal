@@ -1,5 +1,6 @@
 // POST /api/mark — mark one topic's answers and save the attempt.
-// Body: { student, unit, topic, kind: "baseline"|"final", answers: { [questionId]: string } }
+// Body: { student, unit, topic, kind: "baseline"|"final"|"check", style? (for "check"), answers: { [questionId]: string } }
+// "check" is the short check at the end of a lesson; its questions come from the lesson in that style.
 // Choice questions are marked here exactly; typed answers are marked by the AI in ONE call per topic.
 import { addAttempt, getUnit } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const { student, unit: unitId } = body;
   const topicIndex = Number(body.topic);
-  const kind = body.kind === "final" ? "final" : "baseline";
+  const kind: "baseline" | "final" | "check" = body.kind === "final" ? "final" : body.kind === "check" ? "check" : "baseline";
   const answers: Record<string, string> = body.answers && typeof body.answers === "object" ? body.answers : {};
   if (!isUuid(student) || !isUuid(unitId) || !Number.isInteger(topicIndex)) {
     return Response.json({ error: "That request didn't make sense." }, { status: 400 });
@@ -25,7 +26,9 @@ export async function POST(req: Request) {
     const unit = await getUnit(unitId, student);
     const topic = unit?.topics[topicIndex];
     if (!unit || !topic) return Response.json({ error: "Not found." }, { status: 404 });
-    const questions: Question[] = topic[kind];
+    const questions: Question[] =
+      kind === "check" ? (topic.lessons?.[body.style as keyof typeof topic.lessons]?.check ?? []) : topic[kind];
+    if (!questions.length) return Response.json({ error: "There are no questions to mark here." }, { status: 409 });
     const given = (q: Question) => String(answers[q.id] ?? "").slice(0, 1500);
 
     const results = new Map<string, MarkedAnswer>();
