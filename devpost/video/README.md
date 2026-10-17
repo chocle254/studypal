@@ -14,3 +14,9 @@ Everything used to make the Study Pal demo video, so it can be rebuilt. All medi
 | `assets.py` + `edit.py` | Background and phone frame, then the final edit: intro → phone footage timed to each line → outro, with voice and beat mixed |
 
 Paths inside the scripts point at the working folder they were made in; adjust them to rebuild elsewhere.
+
+## Cinematic intro (alternative)
+
+`cinematic-plates.sh` cuts, crops, grades and slowly pushes in on free stock clips from Pexels (Pexels licence: free to use and modify, no attribution required), timed to the narration. `cinematic-overlay.html` is the animated text, letterbox and logo layer, rendered with transparency and composited on top with grain and a vignette.
+
+Clips used (pexels.com/video/…): 9080222 (book pages), 8257361 (highlighting notes), 8196796 (student in an exam), 7987514 (typing in the dark), 4351798 (typing close-up), 8196803 (student stressed at a laptop), 20563164 (silhouette at a laptop).
