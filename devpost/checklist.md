@@ -11,7 +11,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
 
 ## Slices
 
-- [ ] **1. The app opens on your phone and talks to the database and the AI**
+- [x] **1. The app opens on your phone and talks to the database and the AI**
   Becomes usable: The Vercel link opens Study Pal on a phone: calm home screen, navbar with burger, pomodoro button and avatar, and the empty state with a plus button and "no units added yet". A health page confirms Supabase and Nemotron both answer.
   Why now: Sets up the project and proves the three outside services (Vercel, Supabase, Nemotron) work together before anything depends on them. The model name and free limits are unverified, so we find out on day one.
   PRD ref: `prd.md > Home and navigation`, `prd.md > States and Boundaries`
@@ -96,4 +96,4 @@ Activity mode:
 
 - Added `supabase/schema.sql`, `lib/types.ts`, `lib/standin.ts` and a local JSON stand-in database (used only when Supabase settings are missing) — needed to build and verify offline, since this workspace cannot reach NVIDIA or Supabase directly.
 - The server uses Supabase's publishable key (kept only in Vercel) with table policies allowing it to read and write, not the secret key — the learner couldn't reach the secret key from their Supabase login; agreed as a hackathon-only simplification, to switch back before real users.
-- Slice 1 status: built, verified locally, committed and pushed; live check waits on the Vercel settings being active (first deploy showed stand-in AI and local database).
+- Slice 1 verified live: health page on studypal-murex.vercel.app shows database mode supabase ok and AI mode nemotron ok with `nvidia/nemotron-3.5-lightning-30b-a3b`. Health page also lists visible setting names and usable models, and times out the AI check after 25s, after the first live check hung.
