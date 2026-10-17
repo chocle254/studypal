@@ -67,20 +67,28 @@ export default function LessonView({
     }
   }
 
+  // Writing a lesson is the biggest AI job, so a failure is quietly tried once more before showing an error.
   async function fetchLesson() {
     setError(null);
-    try {
-      const res = await fetch("/api/lesson", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ student: getStudentId(), unit: unitId, topic, style, quick, mode, fresh }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.lesson) throw new Error(data.error || "Couldn't write this lesson.");
-      setLesson(data.lesson);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't write this lesson.");
+    let lastError = "Couldn't write this lesson.";
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch("/api/lesson", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ student: getStudentId(), unit: unitId, topic, style, quick, mode, fresh: fresh && attempt === 0 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.lesson) {
+          setLesson(data.lesson);
+          return;
+        }
+        lastError = data.error || lastError;
+      } catch {
+        lastError = "Couldn't reach Study Pal. Check your connection.";
+      }
     }
+    setError(lastError);
   }
 
   useEffect(() => {

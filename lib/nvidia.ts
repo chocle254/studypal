@@ -112,6 +112,19 @@ export async function ask(opts: AskOptions): Promise<string> {
         const body = await res.text();
         throw new AIError(`AI setup problem (${res.status}): ${body.slice(0, 200)}`, "config");
       }
+      if (res.status === 400) {
+        // Groq's JSON mode rejects replies it thinks aren't valid JSON, but sends back what the model wrote.
+        // That text is often usable (our parser is more forgiving), so hand it on; askJson checks the shape.
+        const body = await res.text();
+        let failed = "";
+        try {
+          failed = JSON.parse(body)?.error?.failed_generation ?? "";
+        } catch {
+          /* not JSON */
+        }
+        if (failed.trim()) return clean(failed);
+        throw new AIError(`AI error 400: ${body.slice(0, 200)}`, "failed");
+      }
       if (!res.ok) throw new AIError(`AI error ${res.status}`, "failed");
       const data = await res.json();
       const text = clean(data?.choices?.[0]?.message?.content ?? "");
@@ -145,21 +158,27 @@ export function parseJson<T>(text: string): T {
   }
 }
 
-// Ask, then parse JSON; one extra try if the reply wasn't usable JSON.
+// Ask, then parse JSON. Up to 3 tries: a bad reply or a rejected reply gets another go,
+// the last one without the provider's strict JSON mode (which itself sometimes rejects good answers).
 export async function askJson<T>(opts: AskOptions, valid: (v: T) => boolean): Promise<T> {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await ask(
-      attempt === 0
-        ? { ...opts, json: true }
-        : { ...opts, json: true, user: opts.user + "\n\nReturn ONLY valid JSON in exactly the requested shape." },
-    );
+  let lastErr: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
+      const text = await ask({
+        ...opts,
+        retries: 0,
+        json: attempt < 2,
+        user: attempt === 0 ? opts.user : opts.user + "\n\nReturn ONLY valid JSON in exactly the requested shape. No text before or after it.",
+      });
       const v = parseJson<T>(text);
       if (valid(v)) return v;
-    } catch {
-      /* try again */
+    } catch (e) {
+      lastErr = e;
+      // A settings problem won't be fixed by trying again; anything else gets another go.
+      if (e instanceof AIError && e.kind === "config") throw e;
     }
   }
+  if (lastErr instanceof AIError && lastErr.kind === "busy") throw lastErr;
   throw new AIError("The AI's answer wasn't in the right shape. Please try again.", "bad_output");
 }
 
