@@ -7,6 +7,7 @@
 
 import "server-only";
 import { standIn } from "./standin";
+import { jsonrepair } from "jsonrepair";
 
 const KEY = process.env.AI_API_KEY || process.env.NVIDIA_API_KEY;
 const BASE = (
@@ -144,17 +145,25 @@ export async function ask(opts: AskOptions): Promise<string> {
 
 // Pull the first JSON object or array out of an AI reply (models sometimes wrap it in ``` fences).
 export function parseJson<T>(text: string): T {
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const body = fenced ? fenced[1] : text;
+  let body = text.trim();
+  // Strip a fence only when the WHOLE reply is fenced; code inside the JSON may contain ``` too.
+  const whole = body.match(/^```(?:json)?\s*([\s\S]*?)```\s*$/i);
+  if (whole) body = whole[1];
   const start = body.search(/[[{]/);
   if (start === -1) throw new AIError("The AI didn't send JSON.", "bad_output");
-  const open = body[start];
-  const close = open === "{" ? "}" : "]";
+  const close = body[start] === "{" ? "}" : "]";
   const end = body.lastIndexOf(close);
+  const slice = end > start ? body.slice(start, end + 1) : body.slice(start);
   try {
-    return JSON.parse(body.slice(start, end + 1)) as T;
+    return JSON.parse(slice) as T;
   } catch {
-    throw new AIError("The AI sent JSON that couldn't be read.", "bad_output");
+    // Common slips: raw line breaks or quotes inside code strings, trailing commas, a reply cut off at the end.
+    try {
+      return JSON.parse(jsonrepair(body.slice(start))) as T;
+    } catch (e) {
+      console.warn(`JSON unreadable (${text.length} chars): ${String(e).slice(0, 120)} | starts: ${text.slice(0, 80)} | ends: ${text.slice(-80)}`);
+      throw new AIError("The AI sent JSON that couldn't be read.", "bad_output");
+    }
   }
 }
 
@@ -172,6 +181,7 @@ export async function askJson<T>(opts: AskOptions, valid: (v: T) => boolean): Pr
       });
       const v = parseJson<T>(text);
       if (valid(v)) return v;
+      console.warn(`AI JSON had the wrong shape (task ${opts.task}, attempt ${attempt + 1}): ${text.slice(0, 120)}`);
     } catch (e) {
       lastErr = e;
       // A settings problem won't be fixed by trying again; anything else gets another go.

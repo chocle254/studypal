@@ -119,7 +119,7 @@ export async function POST(req: Request) {
           mode,
           earlier,
         }),
-        maxTokens: mode === "full" ? 6000 : 4500,
+        maxTokens: mode === "full" ? 8000 : 6000,
         temperature: 0.6,
       },
       validLesson,
