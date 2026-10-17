@@ -51,7 +51,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Learner check: Pick the 5-year-old style and open a weak topic. Read the lesson. Does it explain the topic simply, and do the drawings help you understand it?
   Commit: `Add teaching styles and AI lessons with drawings`
 
-- [ ] **5. Topic checks, the final test, and your before-and-after score**
+- [x] **5. Topic checks, the final test, and your before-and-after score**
   Becomes usable: Each lesson ends with a short topic check. When all topics up to your current one are done, the final test runs (same parts, different questions), and the before-and-after screen compares baseline and final scores per topic and overall.
   Why now: Closes the kernel and gives the demo its "oh, that's cool" moment.
   PRD ref: `prd.md > Topic check`, `prd.md > Final test and before-and-after score`, `prd.md > The Core Journey` (steps 10–12)
@@ -61,7 +61,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Learner check: Finish your unit: do the lessons and checks, then the final test. The last screen should show your before and after scores. Does the improvement feel believable?
   Commit: `Add topic checks, final test and before-and-after score`
 
-- [ ] **6. Courses menu, pomodoro timer, and your profile**
+- [x] **6. Courses menu, pomodoro timer, and your profile**
   Becomes usable: The burger opens a dropdown of your courses, the pomodoro button runs a 25/5 focus timer, and the avatar opens a profile showing overall performance across your units.
   Why now: Rounds out the navbar the PRD describes. None of it is needed to prove the kernel, so it comes last.
   PRD ref: `prd.md > Home and navigation`, `prd.md > Pomodoro`
@@ -74,20 +74,20 @@ How checks work in this build: the code is built and checked in Claude's workspa
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 3 (baseline test and results on your phone). Feedback: questions were good but didn't walk through the whole topic → the 5 questions are now a structured tour (core idea, how it works, why it matters, apply it, a common mix-up), covering every key part; the bare percentage felt cold → results now give a gentle verdict ("Great understanding" … "A fresh start"), then where learning starts (from topic one if under 40%, otherwise only the weak topics), leading into the teaching-style choice.
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Final kick-the-tires exploration and feedback completed — learner tried the finished app on their phone (full round, Ask about this, Go deeper, Fix this topic + retake, courses menu, profile, timer) and reported "it looks great"; no changes requested. Database constraint for `retake` attempts supplied as a one-time SQL step.
 
 ## Final Review
 
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Final review complete — feedback resolved and learner confirms ready to ship (no outstanding fixes; `npm run build` passes; full round verified end to end with the stand-in AI, live with Groq on the learner's phone)
 
 ## Code Tour and App Map
 
 - [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse (rendered at phone width in light and dark with scripts off; paths and anchors checked against commit 407d872)
 
 Activity and evidence:
-Route and stops:
+Route and stops: LessonView `fetchLesson` → `app/api/lesson/route.ts` `POST` (`sourceFor`, `lessonPrompt`, `askJson`, `updateUnit`) → `cleanDiagram` / `Diagram` / `LessonText` (offered as a phone + GitHub walkthrough)
 Edit outcome:
 Reflection:
 Activity mode:

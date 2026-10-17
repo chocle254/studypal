@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Pal App Map</title>
+<style>
+  :root {
+    --bg: #f1eee7; --surface: #f8f6f1; --ink: #2b302d; --muted: #6d746f; --line: #ddd8cc;
+    --sage: #6f9282; --sage-soft: #dfe7e2; --clay: #c48f72; --clay-soft: #f1e3da; --sky-soft: #e0e8ec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b201e; --surface: #232a26; --ink: #e6e9e6; --muted: #9ba39e; --line: #343b38;
+      --sage: #8fb2a2; --sage-soft: #2a3a33; --clay: #d9a78a; --clay-soft: #3a2e28; --sky-soft: #2a343a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.9rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 1.25rem; margin: 36px 0 10px; }
+  h3 { font-size: 1.05rem; margin: 0 0 4px; }
+  p { margin: 0 0 10px; }
+  .muted { color: var(--muted); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 12px 0; }
+  .pieces { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .pieces .card { margin: 0; }
+  code { font: 0.88em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--sage-soft); padding: 1px 6px; border-radius: 6px; word-break: break-word; }
+  pre { background: #1b211e; color: #e3e8e4; padding: 12px; border-radius: 12px; overflow-x: auto; font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  pre code { background: none; padding: 0; color: inherit; }
+  ol.route { padding: 0; list-style: none; counter-reset: stop; }
+  ol.route > li { counter-increment: stop; position: relative; padding-left: 44px; }
+  ol.route > li::before { content: counter(stop); position: absolute; left: 0; top: 16px; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--sage); color: var(--bg); font-weight: 700; display: grid; place-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  td { padding: 10px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { width: 42%; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--sage); font-weight: 600; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--sage); outline-offset: 2px; border-radius: 4px; }
+  a { color: var(--sage); }
+  .tag { display: inline-block; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .practice { background: var(--clay-soft); border: none; }
+  ol.flow { list-style: none; padding: 0; margin: 0; }
+  .box { border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; background: var(--surface); }
+  .box strong { display: block; }
+  .box span { color: var(--muted); font-size: 0.9rem; }
+  .box.sage { background: var(--sage-soft); } .box.clay { background: var(--clay-soft); } .box.sky { background: var(--sky-soft); }
+  .arrow { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">App map · a snapshot of the code at commit 407d872</span>
+  <h1>Study Pal</h1>
+  <p class="muted">Test first, teach only the gaps, then show the before-and-after. A phone-first study app built for Devpost's Build With AI: Basics.</p>
+
+  <h2>The main pieces</h2>
+  <div class="pieces">
+    <div class="card"><h3>Phone screens</h3><p class="muted">Next.js pages and components in <code>app/</code> and <code>components/</code>. PDF text is read on the phone (<code>lib/pdf.ts</code>).</p></div>
+    <div class="card"><h3>Server routes</h3><p class="muted">Small functions in <code>app/api/</code> that hold the keys, call the AI and save results. Answers never go to the phone.</p></div>
+    <div class="card"><h3>The AI</h3><p class="muted">Groq (or NVIDIA) through <code>lib/nvidia.ts</code>. All instructions to it live in <code>lib/prompts.ts</code>.</p></div>
+    <div class="card"><h3>Storage</h3><p class="muted">Supabase tables <code>students</code>, <code>courses</code>, <code>units</code>, <code>attempts</code> via <code>lib/supabase.ts</code>.</p></div>
+  </div>
+
+  <h2>One action, end to end: tapping “Learn” on a weak topic</h2>
+  <div class="card">
+    <ol class="flow" aria-label="How a lesson is made">
+      <li class="box sage"><strong>1 · Lesson screen</strong><span>LessonView · fetchLesson</span></li>
+      <li class="arrow" aria-hidden="true">↓ topic + style</li>
+      <li class="box"><strong>2 · Lesson route</strong><span>POST /api/lesson · finds your pages with sourceFor</span></li>
+      <li class="arrow" aria-hidden="true">↓ your pages + mistakes</li>
+      <li class="box clay"><strong>AI (Groq)</strong><span>lessonPrompt → JSON, retried by askJson</span></li>
+      <li class="arrow" aria-hidden="true">↓ checked by cleanDiagram</li>
+      <li class="box sky"><strong>Supabase</strong><span>saved once in units.topics[i].lessons, reused next time</span></li>
+      <li class="arrow" aria-hidden="true">↓ lesson</li>
+      <li class="box sage"><strong>3 · Steps + diagrams on the phone</strong><span>LessonText · Diagram · CodeBlock</span></li>
+    </ol>
+  </div>
+
+  <h2>A 3-stop route through the code</h2>
+  <p class="muted">Reference route. Open each file on GitHub (or in an editor) and search for the anchor.</p>
+  <ol class="route">
+    <li class="card">
+      <h3>The screen asks for a lesson</h3>
+      <p><code>components/LessonView.tsx</code> → search <code>fetchLesson</code></p>
+      <p>When you tap Learn, this sends the topic number and your teaching style to the server and shows the “Writing your lesson…” screen with the topic's key parts while it waits.</p>
+    </li>
+    <li class="card">
+      <h3>The server finds your pages and asks the AI</h3>
+      <p><code>app/api/lesson/route.ts</code> → search <code>export async function POST</code>, then <code>sourceFor</code> in <code>lib/parts.ts</code> and <code>lessonPrompt</code> in <code>lib/prompts.ts</code></p>
+      <p>If the lesson is already saved, it's returned straight away. Otherwise <code>sourceFor</code> cuts out the part of your PDF about this topic, <code>lessonPrompt</code> tells the AI what sections to write and which mistakes from your first test to clear up, and <code>askJson</code> (<code>lib/nvidia.ts</code>) retries if the reply isn't valid JSON. The result is saved with <code>updateUnit</code>.</p>
+    </li>
+    <li class="card">
+      <h3>The phone draws it</h3>
+      <p><code>lib/diagram.ts</code> → <code>cleanDiagram</code>, then <code>components/Diagram.tsx</code> and <code>components/LessonText.tsx</code></p>
+      <p>The AI only supplies words in one of four shapes (flow, cycle, compare, parts). <code>cleanDiagram</code> drops anything that doesn't fit; <code>Diagram</code> draws it in the app's colours; <code>LessonText</code> turns numbered points into real lists.</p>
+      <details>
+        <summary>What the AI sends for a flowchart</summary>
+<pre><code>{ &quot;kind&quot;: &quot;flow&quot;,
+  &quot;steps&quot;: [&quot;Collect data&quot;, &quot;Train logistic&quot;, &quot;Validate&quot;, &quot;Score new&quot;] }</code></pre>
+      </details>
+    </li>
+  </ol>
+
+  <h2>To change this, start here</h2>
+  <div class="card">
+    <table>
+      <tr><td>Colours and the calm look</td><td><code>app/globals.css</code> → <code>:root</code> tokens (and the dark set below it)</td></tr>
+      <tr><td>How each teaching style sounds</td><td><code>lib/prompts.ts</code> → <code>STYLE_GUIDES</code>; names and samples in <code>lib/types.ts</code> → <code>STYLES</code></td></tr>
+      <tr><td>What counts as a “strong” topic</td><td><code>components/Results.tsx</code> → <code>STRONG</code> (0.7)</td></tr>
+      <tr><td>The gentle verdict words</td><td><code>components/Results.tsx</code> → <code>verdict</code></td></tr>
+      <tr><td>Pages read per round</td><td><code>lib/parts.ts</code> → <code>PART_CHARS</code> (about 15 pages)</td></tr>
+      <tr><td>Pomodoro lengths</td><td><code>lib/pomodoro.ts</code> → <code>LENGTH</code></td></tr>
+      <tr><td>Which AI model is used</td><td>Vercel settings <code>AI_MODEL</code>, <code>AI_BASE_URL</code> (see <code>.env.example</code>)</td></tr>
+      <tr><td>The order of a round (test → teach → test)</td><td><code>components/UnitView.tsx</code> → <code>roundFinished</code>, <code>pathLeft</code></td></tr>
+    </table>
+  </div>
+
+  <h2>A practice to reuse</h2>
+  <div class="card practice">
+    <p><strong>Give the AI the real material, ask it for structured data, and let your own code do the drawing.</strong></p>
+    <p>The first lessons only received a 120-word summary of each topic, and the AI drew its own SVG pictures. Trying them on a phone with a real PDF showed both problems at once: shallow text and meaningless images. The fix was two changes you can see in the route above. <code>sourceFor</code> now passes the student's actual pages, and the AI returns a small JSON shape that <code>cleanDiagram</code> checks and <code>Diagram</code> draws (see <code>devpost/checklist.md</code> → Revisions).</p>
+    <p>On another project: when AI output looks thin, check what it was given before blaming the model. When the AI's output has to look right every time, have it fill a fixed shape your code validates and renders. Then try each slice with real content on the real device before moving on.</p>
+  </div>
+
+  <h2>Run it again</h2>
+  <div class="card">
+    <p>Live: open the Vercel link on your phone. Health check: <code>/api/health</code>.</p>
+    <p>Locally: <code>npm install</code>, then <code>npm run dev</code>, and open <code>http://localhost:3000</code>. Without keys it uses a local file database and a labelled stand-in AI.</p>
+    <p class="muted">This map is a snapshot of commit 407d872 and can drift as the code changes.</p>
+  </div>
+</main>
+</body>
+</html>
