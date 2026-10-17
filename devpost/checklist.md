@@ -21,7 +21,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Learner check: Open the Vercel link on your phone. You should see the navbar (burger on the left, pomodoro and avatar on the right) and a plus button with "no units added yet". Say whether the colors and feel match what you pictured.
   Commit: `Scaffold Study Pal with home screen, database and AI health check`
 
-- [ ] **2. You can add a unit and the AI breaks it into topics**
+- [x] **2. You can add a unit and the AI breaks it into topics**
   Becomes usable: Tap plus, enter course and level, add a unit name, pick a PDF from the phone and say which topic you're at. The phone reads the text, the AI splits it into topics and writes the baseline and final questions, and the unit appears on the home screen as a card in two columns.
   Why now: Every later step needs a unit with topics and questions. It also proves the risky parts: reading a PDF on a phone and getting usable structured output from Nemotron.
   PRD ref: `prd.md > Adding a course and unit`, `prd.md > Home and navigation`, `prd.md > The Core Journey` (steps 2–4)
