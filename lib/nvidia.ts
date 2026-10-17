@@ -74,6 +74,7 @@ export async function ask(opts: AskOptions): Promise<string> {
   if (aiMode() === "stand-in") return standIn(opts);
 
   let lastErr: unknown;
+  let rateLimitWaits = 0;
   const attempts = 1 + (opts.retries ?? 1);
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {
@@ -95,7 +96,18 @@ export async function ask(opts: AskOptions): Promise<string> {
         }),
         signal: AbortSignal.timeout(opts.timeoutMs ?? 55_000),
       });
-      if (res.status === 429) throw new AIError("Study Pal is busy, try again in a minute.", "busy");
+      if (res.status === 429) {
+        // Free plans limit requests per minute. Wait as long as the provider asks (up to 20s), then try again.
+        const wait = Math.min(20, Number(res.headers.get("retry-after")) || 6);
+        if (rateLimitWaits < 3) {
+          rateLimitWaits++;
+          console.warn(`AI rate limited (task ${opts.task}); waiting ${wait}s`);
+          await new Promise((r) => setTimeout(r, wait * 1000));
+          attempt--; // a rate-limit wait doesn't use up a normal attempt
+          continue;
+        }
+        throw new AIError("Study Pal is busy, try again in a minute.", "busy");
+      }
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         const body = await res.text();
         throw new AIError(`AI setup problem (${res.status}): ${body.slice(0, 200)}`, "config");

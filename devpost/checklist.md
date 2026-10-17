@@ -32,7 +32,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Commit: `Add course and unit with PDF reading and AI topic analysis`
 
 - [ ] **3. You take the baseline test and see your strong and weak topics**
-  Becomes usable: Opening a unit starts the baseline test: one topic at a time, five questions, mostly typed, with a progress box of the other topics. Answers are marked by the AI, and the results screen shows strong and weak topics and overall understanding.
+  Becomes usable: Opening a unit starts the baseline test for the current round (up to 4 topics): one topic at a time, five questions, mostly typed, with a progress box of the other topics. Answers are marked by the AI, and the results screen shows strong and weak topics and overall understanding.
   Why now: This is the first half of the kernel, testing first. It's where early feedback shapes the rest of the build.
   PRD ref: `prd.md > Baseline mock test`, `prd.md > The Core Journey` (steps 5–6)
   Spec ref: `spec.md > Baseline and Final Tests`, `spec.md > Results, Style and Topic Choice`, `spec.md > Data Model`
@@ -93,6 +93,8 @@ Reflection:
 Activity mode:
 
 ## Revisions
+
+- Units now run in rounds of up to 4 topics (test → teach → test, then the next round); only the current round's questions are prepared. Slices 3–5 apply per round, and slice 5's before-and-after covers the finished round. Learner's request after a long unit (8 topics) hit Groq's per-minute limit on the last two topics. AI calls now wait and retry when the provider says to slow down (HTTP 429).
 
 - AI provider is now a setting (AI_BASE_URL, AI_API_KEY, AI_MODEL), with Groq's `openai/gpt-oss-20b` as the default and Nemotron as the fallback — NVIDIA's free endpoint queued for 45–60s even on tiny answers (timing check: lightning model, thinking on or off), so adding a unit timed out. The learner chose to switch to Groq, which they already use on another project. Long notes are trimmed to ~24,000 characters for Groq's per-minute token limit.
 - Adding a unit is now two steps: topics first, then questions one topic at a time (`POST /api/units/<id>/questions`), with a waiting screen that shows facts from the student's notes and topic-by-topic progress — the learner asked for something to keep students busy while it reads, and smaller AI jobs time out less. Extra taps are ignored while working.

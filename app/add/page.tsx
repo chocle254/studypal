@@ -7,6 +7,7 @@ import { readPdfText, cleanText, UnreadableFileError } from "@/lib/pdf";
 import type { HomeCourse } from "@/lib/types";
 import { pickFacts, prepareTopics } from "@/lib/prepare";
 import Preparing from "@/components/Preparing";
+import { roundTopics } from "@/lib/batches";
 
 type Stage = "course" | "unit" | "reading" | "questions";
 
@@ -74,12 +75,12 @@ export default function AddPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.id) throw new Error(data.error || "Something went wrong. Please try again.");
 
-      setTopics(data.topics);
+      // Only the first round (up to 4 topics) is prepared now; later rounds when the student gets there.
+      const first = roundTopics(0, data.topics.length);
+      setTopics(first.map((n) => data.topics[n]));
       setDone(new Set());
       setStage("questions");
-      const result = await prepareTopics(data.id, data.topics.map((_: string, n: number) => n), (n) =>
-        setDone((d) => new Set(d).add(n)),
-      );
+      const result = await prepareTopics(data.id, first, (n) => setDone((d) => new Set(d).add(n)));
       // Even if one topic failed, the unit is saved: the unit page offers to finish preparing.
       router.push(`/unit/${data.id}`);
       if (!result.ok) console.warn(result.error);

@@ -158,6 +158,8 @@ studypal/
 
 - **AI provider as a setting, Groq by default** instead of Nemotron only — NVIDIA's free queue made each answer take 45–60s. Groq's free plan limits tokens per minute, so long notes are trimmed to about 24,000 characters for the AI.
 
+- **Rounds of up to 4 topics** (`lib/batches.ts`) — questions are written only for the round the student is on; later rounds are prepared when the student reaches them. Learner's request, to save AI usage and keep tests short.
+
 ## Decisions and Open Issues
 Learner choices:
 - Vercel for hosting, Supabase for data, Nemotron for the AI, a switch to paid AI when users grow.

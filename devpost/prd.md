@@ -13,7 +13,7 @@ Source: `scope.md > The Unique Kernel`, `scope.md > The Core Loop`, `scope.md > 
 2. They tap the plus button, enter their course and their level, and go to the next screen.
 3. On that screen they add a unit, upload its study material (a PDF or text), and say which topic they're currently at.
 4. The AI reads the whole unit, from the first topic up to the topic they're at.
-5. The student takes a baseline mock test, one topic at a time: five questions per topic, mostly typed answers with a few options.
+5. The student takes a baseline mock test for the current round (up to 4 topics), one topic at a time: five questions per topic, mostly typed answers with a few options.
 6. They see the results: which topics they're strong in, which they're weak in, and their overall understanding of the unit.
 7. They pick a teaching style (5-year-old, gossip, nerd).
 8. They choose whether to start from topic one or pick custom topics to study.
@@ -108,6 +108,7 @@ Calm and clean. Soft, less-bright colors to be comfortable for the eyes. Playful
 - **Sign-in**: not in the hackathon version. Real accounts are planned later, because each student's learning patterns are saved separately.
 
 ## Product Decisions
+- Units are worked through in rounds of up to 4 topics: baseline test, teaching and final test for one round, then the next round — the learner's choice, so a student who doesn't say which topic they're at isn't tested on 8 topics at once, and the AI only prepares the round the student is on.
 - Mobile first, with a PC version later — the learner is designing for phones first.
 - Badges left out for now; pomodoro replaces time spent on site — to keep the navbar small and add a focus aid for a good learning environment.
 - The avatar stays — students should check their account for overall performance across all units.
