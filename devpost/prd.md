@@ -108,7 +108,8 @@ Calm and clean. Soft, less-bright colors to be comfortable for the eyes. Playful
 - **Sign-in**: not in the hackathon version. Real accounts are planned later, because each student's learning patterns are saved separately.
 
 ## Product Decisions
-- Units are worked through in rounds of up to 4 topics: baseline test, teaching and final test for one round, then the next round — the learner's choice, so a student who doesn't say which topic they're at isn't tested on 8 topics at once, and the AI only prepares the round the student is on.
+- Units are worked through in rounds: Study Pal reads about 15 pages at a time, each part becoming a round of up to 5 topics (baseline test, teaching, final test), then reads the next part — the learner's choice, so long PDFs (80+ pages) are fully covered, tests stay short, and the AI only prepares the round the student is on.
+- A unit added with the wrong PDF can be deleted and added again.
 - Mobile first, with a PC version later — the learner is designing for phones first.
 - Badges left out for now; pomodoro replaces time spent on site — to keep the navbar small and add a focus aid for a good learning environment.
 - The avatar stays — students should check their account for overall performance across all units.

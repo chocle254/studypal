@@ -7,7 +7,6 @@ import { readPdfText, cleanText, UnreadableFileError } from "@/lib/pdf";
 import type { HomeCourse } from "@/lib/types";
 import { pickFacts, prepareTopics } from "@/lib/prepare";
 import Preparing from "@/components/Preparing";
-import { roundTopics } from "@/lib/batches";
 
 type Stage = "course" | "unit" | "reading" | "questions";
 
@@ -67,8 +66,8 @@ export default function AddPage() {
     setFacts(pickFacts(text));
     // Long PDFs (a whole book) are trimmed for the AI's free limits; say so honestly.
     setNote(
-      text.length > 24_000
-        ? "This PDF is long, so Study Pal is reading its first part. For best results, add one chapter or set of notes at a time."
+      text.length > 22_000
+        ? "This is a long PDF, so Study Pal reads it in parts of about 15 pages. You'll start with the first part; the next part is read when you're ready."
         : undefined,
     );
     setStage("reading");
@@ -82,9 +81,9 @@ export default function AddPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.id) throw new Error(data.error || "Something went wrong. Please try again.");
 
-      // Only the first round (up to 4 topics) is prepared now; later rounds when the student gets there.
-      const first = roundTopics(0, data.topics.length);
-      setTopics(first.map((n) => data.topics[n]));
+      // Round 1 is the first part of the material; later parts are read when the student gets there.
+      const first: number[] = data.topics.map((_: string, n: number) => n);
+      setTopics(data.topics);
       setDone(new Set());
       setStage("questions");
       const result = await prepareTopics(data.id, first, (n) => setDone((d) => new Set(d).add(n)));

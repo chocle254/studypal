@@ -27,6 +27,7 @@ export interface Lesson {
 }
 
 export interface Topic {
+  part: number; // which part of the PDF (= which round) this topic came from
   title: string;
   key_parts: string[];
   notes: string; // core facts from the material, used for questions and lessons
@@ -44,6 +45,8 @@ export interface Unit {
   material_text: string;
   style: Style | null;
   topics: Topic[];
+  parts_read: number; // how many parts of the PDF the AI has read so far
+  reached_current: boolean; // the topic the student said they're at has been found; stop reading further
   created_at: string;
 }
 
@@ -89,6 +92,7 @@ export interface PublicQuestion {
 }
 
 export interface PublicTopic {
+  part: number;
   title: string;
   key_parts: string[];
   ready: boolean; // its questions have been written
@@ -102,4 +106,8 @@ export interface PublicUnit {
   current_topic: number;
   style: Style | null;
   topics: PublicTopic[];
+  parts_read: number;
+  parts_total: number;
+  can_read_more: boolean;
+  pages_read: string | null; // e.g. "1–15 of 80"
 }

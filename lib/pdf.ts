@@ -3,7 +3,7 @@
 
 export class UnreadableFileError extends Error {}
 
-const MAX_CHARS = 60_000; // plenty for a unit; keeps requests small and AI calls affordable
+const MAX_CHARS = 400_000; // about 250 pages; Study Pal reads it part by part
 
 export async function readPdfText(file: File, onProgress?: (page: number, total: number) => void): Promise<string> {
   const pdfjs = await import("pdfjs-dist");
@@ -39,7 +39,7 @@ export async function readPdfText(file: File, onProgress?: (page: number, total:
     length += pageText.length;
   }
 
-  return cleanText(parts.join("\n\n"));
+  return cleanText(parts.join("\n\f\n")); // \f marks a page break
 }
 
 export function cleanText(text: string): string {

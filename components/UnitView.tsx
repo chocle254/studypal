@@ -10,29 +10,31 @@ import Preparing from "@/components/Preparing";
 import { prepareTopics } from "@/lib/prepare";
 import { roundCount, roundTopics } from "@/lib/batches";
 
-// The unit screen. For now it shows the topics the AI found; the test flow arrives in slice 3.
+// The unit screen: the rounds read so far, each with its topics.
+// The test flow is added in slice 3.
 export default function UnitView() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [confirmDelete, setConfirmDelete] = useState(false);
-
-  async function removeUnit() {
-    const res = await fetch(`/api/units/${id}?student=${getStudentId()}`, { method: "DELETE" });
-    if (res.ok) router.push("/");
-    else setError("Couldn't delete this unit. Try again.");
-  }
   const [unit, setUnit] = useState<PublicUnit | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [preparing, setPreparing] = useState(false);
+  const [busy, setBusy] = useState<null | "reading" | "questions">(null);
+  const [prepTopics, setPrepTopics] = useState<string[]>([]);
   const [done, setDone] = useState<Set<number>>(new Set());
   const [prepError, setPrepError] = useState<string | null>(null);
-  const currentRound = 0; // the round the student is on; moves forward once tests exist (slice 3)
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function load() {
     return fetch(`/api/units/${id}?student=${getStudentId()}`)
       .then((r) => r.json())
-      .then((d) => (d.unit ? setUnit(d.unit) : setError(d.error || "Couldn't find this unit.")))
-      .catch(() => setError("Couldn't reach Study Pal. Check your connection."));
+      .then((d) => {
+        if (d.unit) setUnit(d.unit as PublicUnit);
+        else setError(d.error || "Couldn't find this unit.");
+        return (d.unit as PublicUnit) ?? null;
+      })
+      .catch(() => {
+        setError("Couldn't reach Study Pal. Check your connection.");
+        return null;
+      });
   }
 
   useEffect(() => {
@@ -40,17 +42,46 @@ export default function UnitView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  async function finishPreparing() {
-    if (!unit) return;
-    setPrepError(null);
-    const round = roundTopics(currentRound, unit.topics.length);
-    setDone(new Set(round.filter((n) => unit.topics[n].ready).map((n) => round.indexOf(n))));
-    setPreparing(true);
-    const missing = round.filter((n) => !unit.topics[n].ready);
-    const result = await prepareTopics(unit.id, missing, (n) => setDone((d) => new Set(d).add(round.indexOf(n))));
+  // Write questions for every topic in a round that doesn't have them yet.
+  async function prepareRound(u: PublicUnit, round: number) {
+    const indices = roundTopics(round, u.topics);
+    setPrepTopics(indices.map((n) => u.topics[n].title));
+    setDone(new Set(indices.flatMap((n, k) => (u.topics[n].ready ? [k] : []))));
+    setBusy("questions");
+    const missing = indices.filter((n) => !u.topics[n].ready);
+    const result = await prepareTopics(u.id, missing, (n) => setDone((d) => new Set(d).add(indices.indexOf(n))));
     if (!result.ok) setPrepError(result.error);
     await load();
-    setPreparing(false);
+    setBusy(null);
+  }
+
+  // Read the next part of the PDF (about 15 pages) into a new round, then prepare its questions.
+  async function readNext() {
+    if (!unit) return;
+    setPrepError(null);
+    setPrepTopics([]);
+    setBusy("reading");
+    try {
+      const res = await fetch(`/api/units/${unit.id}/read-next`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student: getStudentId() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Couldn't read the next part.");
+      const fresh = await load();
+      if (fresh && data.round !== null) await prepareRound(fresh, data.round);
+      else setBusy(null);
+    } catch (e) {
+      setPrepError(e instanceof Error ? e.message : "Couldn't read the next part.");
+      setBusy(null);
+    }
+  }
+
+  async function removeUnit() {
+    const res = await fetch(`/api/units/${id}?student=${getStudentId()}`, { method: "DELETE" });
+    if (res.ok) router.push("/");
+    else setError("Couldn't delete this unit. Try again.");
   }
 
   if (error) {
@@ -69,21 +100,21 @@ export default function UnitView() {
     );
   }
 
-  if (preparing) {
+  const rounds = roundCount(unit.topics);
+  const currentRound = Math.max(0, rounds - 1); // the latest round read; the test flow refines this in slice 3
+
+  if (busy) {
     return (
       <Preparing
-        facts={roundTopics(currentRound, unit.topics.length).flatMap((n) =>
-          unit.topics[n].key_parts.map((k) => `${unit.topics[n].title}: ${k}`),
-        )}
-        topics={roundTopics(currentRound, unit.topics.length).map((n) => unit.topics[n].title)}
+        facts={unit.topics.flatMap((t) => t.key_parts.map((k) => `${t.title}: ${k}`))}
+        topics={prepTopics}
         done={done}
-        phase="questions"
+        phase={busy}
       />
     );
   }
 
-  const rounds = roundCount(unit.topics.length);
-  const notReady = roundTopics(currentRound, unit.topics.length).filter((n) => !unit.topics[n].ready).length;
+  const notReady = roundTopics(currentRound, unit.topics).filter((n) => !unit.topics[n].ready).length;
 
   return (
     <section className="mt-4 animate-rise">
@@ -93,23 +124,21 @@ export default function UnitView() {
       <p className="mt-4 text-sm text-muted">{unit.course}{unit.level ? ` · ${unit.level}` : ""}</p>
       <h1 className="text-2xl font-extrabold">{unit.name}</h1>
       <p className="mt-1 text-sm text-muted">
-        {unit.topics.length} topic{unit.topics.length === 1 ? "" : "s"}, up to where you are
+        {unit.topics.length} topic{unit.topics.length === 1 ? "" : "s"} so far
+        {unit.pages_read ? ` · pages ${unit.pages_read} read` : unit.parts_total > 1 ? ` · part ${unit.parts_read} of ${unit.parts_total} read` : ""}
       </p>
 
       {Array.from({ length: rounds }, (_, r) => (
         <div key={r} className="mt-5">
-          {rounds > 1 && (
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
-              Round {r + 1} of {rounds}
-              {r === currentRound ? " · you are here" : r > currentRound ? " · prepared when you get here" : ""}
-            </p>
-          )}
+          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+            Round {r + 1}
+            {r === currentRound ? " · you are here" : ""}
+          </p>
           <ol className="space-y-3">
-            {roundTopics(r, unit.topics.length).map((i) => {
+            {roundTopics(r, unit.topics).map((i) => {
               const t = unit.topics[i];
               return (
-                <li key={i} className={`rounded-2xl bg-surface border border-line p-4 animate-rise ${r > currentRound ? "opacity-60" : ""}`}
-                  style={{ animationDelay: `${i * 70}ms` }}>
+                <li key={i} className="rounded-2xl bg-surface border border-line p-4 animate-rise" style={{ animationDelay: `${i * 70}ms` }}>
                   <div className="flex items-start gap-3">
                     <span className="w-7 h-7 shrink-0 rounded-full bg-sage-soft grid place-items-center text-sm font-bold">{i + 1}</span>
                     <div>
@@ -128,13 +157,14 @@ export default function UnitView() {
         </div>
       ))}
 
+      {prepError && <p className="mt-4 text-sm text-clay">{prepError}</p>}
+
       {notReady > 0 && (
         <div className="mt-6 rounded-2xl bg-sky-soft p-4 text-sm">
           <p className="font-semibold">
             {notReady} topic{notReady === 1 ? "" : "s"} in this round still need{notReady === 1 ? "s" : ""} test questions.
           </p>
-          {prepError && <p className="mt-1 text-clay">{prepError}</p>}
-          <button onClick={finishPreparing}
+          <button onClick={() => prepareRound(unit, currentRound)}
             className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
             Finish preparing
           </button>
@@ -144,6 +174,17 @@ export default function UnitView() {
       <div className="mt-6 rounded-2xl bg-clay-soft p-4 text-sm">
         Next up: a quick test to see what you already know. <span className="text-muted">(Coming in the next step.)</span>
       </div>
+
+      {unit.can_read_more && notReady === 0 && (
+        <div className="mt-4 rounded-2xl border border-line p-4 text-sm">
+          <p className="font-semibold">There&apos;s more in your PDF.</p>
+          <p className="mt-1 text-muted">Study Pal reads about 15 pages per round. When you finish this round, read the next part.</p>
+          <button onClick={readNext} className="mt-3 w-full rounded-xl border border-sage text-sage font-bold py-3 active:scale-[0.98] transition">
+            Read the next part
+          </button>
+        </div>
+      )}
+
       <div className="mt-10 text-center">
         {!confirmDelete ? (
           <button onClick={() => setConfirmDelete(true)} className="text-sm text-muted underline underline-offset-4">

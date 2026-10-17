@@ -28,12 +28,22 @@ function standInAnalyze(user: string) {
     if (looksLikeHeading || topics.length === 0) topics.push({ title: line.replace(/^[\d.\s]+/, "") || "Topic", body: [] });
     else topics[topics.length - 1].body.push(line);
   }
-  const usable = topics.filter((t) => t.body.length).slice(0, 8);
+  // Group sections so there are at most 5 topics, like the real prompt asks.
+  const sections = topics.filter((t) => t.body.length);
+  const per = Math.ceil(sections.length / 5) || 1;
+  const usable = Array.from({ length: Math.ceil(sections.length / per) }, (_, g) => {
+    const group = sections.slice(g * per, g * per + per);
+    return { title: group.map((x) => x.title).join(" & "), body: group.flatMap((x) => x.body) };
+  });
   const current = user.match(/currently at this topic: "([^"]+)"/)?.[1]?.toLowerCase();
-  let currentIndex = usable.length - 1;
+  let currentIndex = 0;
+  let contains = false;
   if (current) {
     const found = usable.findIndex((t) => t.title.toLowerCase().includes(current) || current.includes(t.title.toLowerCase()));
-    if (found >= 0) currentIndex = found;
+    if (found >= 0) {
+      currentIndex = found;
+      contains = true;
+    }
   }
   return {
     topics: usable.map((t) => {
@@ -44,6 +54,7 @@ function standInAnalyze(user: string) {
         notes: s.slice(0, 5).join(" "),
       };
     }),
+    contains_current: contains,
     current_index: Math.max(0, currentIndex),
   };
 }

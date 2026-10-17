@@ -14,27 +14,44 @@ export interface AnalyzedTopic {
 
 export interface Analysis {
   topics: AnalyzedTopic[];
-  current_index: number;
+  contains_current: boolean; // the student's current topic is in this part
+  current_index: number; // its index in this part's topics, if contained
 }
 
-export function analyzePrompt(p: { course: string; level: string; unit: string; currentTopic: string; text: string }) {
+export function analyzePrompt(p: {
+  course: string;
+  level: string;
+  unit: string;
+  currentTopic: string;
+  text: string;
+  partLabel: string; // e.g. "part 1 of 6 (pages 1–15)"
+  earlierTopics: string[];
+}) {
   return {
     system:
       "You are Study Pal, a study assistant for students. You read a unit's study material and split it into its topics. You only use what is in the material. You answer with JSON only.",
     user: `Course: ${p.course} (level: ${p.level || "not given"})
 Unit: ${p.unit}
+This is ${p.partLabel} of the student's material.
+${p.earlierTopics.length ? `Topics already covered from earlier parts (don't repeat them): ${p.earlierTopics.join("; ")}` : ""}
 The student says they are currently at this topic: ${p.currentTopic ? `"${p.currentTopic}"` : "not given"}
 
-Split the material into its main topics, in the order they appear (at most 8 topics).
+Find the main study topics in THIS part, in the order they appear: at most 5 topics. If this part has more sections
+than that, group related sections into one topic so that nothing is left out. Skip front matter such as
+the cover, copyright, contents page, preface and index. If a topic continues from an earlier part, give only what is new.
 For each topic give:
 - "title": a short topic title
 - "key_parts": 3 to 5 distinct ideas a student must understand in this topic (short phrases)
-- "notes": the core facts of this topic from the material, in plain English, at most 120 words
+- "notes": the core facts of this topic FROM THIS PART, in plain English, at most 120 words
 
-Also give "current_index": the 0-based index of the topic the student is at. If they didn't say, use the last topic.
+Also give:
+- "contains_current": true if the student's current topic is in this part, otherwise false
+- "current_index": the 0-based index of that topic in your list (0 if not contained)
+
+If this part has no real study content (for example only front matter), return an empty "topics" list.
 
 Return ONLY this JSON:
-{"topics":[{"title":"...","key_parts":["..."],"notes":"..."}],"current_index":0}
+{"topics":[{"title":"...","key_parts":["..."],"notes":"..."}],"contains_current":false,"current_index":0}
 
 ${MATERIAL_START}
 ${p.text}
@@ -46,7 +63,6 @@ export function validAnalysis(a: Analysis): boolean {
   return (
     !!a &&
     Array.isArray(a.topics) &&
-    a.topics.length > 0 &&
     a.topics.every((t) => t && typeof t.title === "string" && Array.isArray(t.key_parts) && t.key_parts.length > 0)
   );
 }

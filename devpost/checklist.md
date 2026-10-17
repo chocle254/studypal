@@ -94,6 +94,8 @@ Activity mode:
 
 ## Revisions
 
+- Long PDFs are read part by part: about 15 pages (22,000 characters) per part, each part becoming one round of up to 5 topics (related sections grouped so nothing is dropped). The first part is read when the unit is added; "Read the next part" reads the next one. Rounds are now defined by part (replacing fixed groups of 4). New `units.parts_read` and `units.reached_current` columns. A wrong unit can be deleted. Learner's request after a book-length PDF was only read for its first ~15 pages; most of their PDFs are 80+ pages.
+
 - Units now run in rounds of up to 4 topics (test → teach → test, then the next round); only the current round's questions are prepared. Slices 3–5 apply per round, and slice 5's before-and-after covers the finished round. Learner's request after a long unit (8 topics) hit Groq's per-minute limit on the last two topics. AI calls now wait and retry when the provider says to slow down (HTTP 429).
 
 - AI provider is now a setting (AI_BASE_URL, AI_API_KEY, AI_MODEL), with Groq's `openai/gpt-oss-20b` as the default and Nemotron as the fallback — NVIDIA's free endpoint queued for 45–60s even on tiny answers (timing check: lightning model, thinking on or off), so adding a unit timed out. The learner chose to switch to Groq, which they already use on another project. Long notes are trimmed to ~24,000 characters for Groq's per-minute token limit.

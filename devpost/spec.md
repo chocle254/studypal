@@ -158,7 +158,7 @@ studypal/
 
 - **AI provider as a setting, Groq by default** instead of Nemotron only — NVIDIA's free queue made each answer take 45–60s. Groq's free plan limits tokens per minute, so long notes are trimmed to about 24,000 characters for the AI.
 
-- **Rounds of up to 4 topics** (`lib/batches.ts`) — questions are written only for the round the student is on; later rounds are prepared when the student reaches them. Learner's request, to save AI usage and keep tests short.
+- **Reading long PDFs part by part** (`lib/parts.ts`, `lib/reading.ts`, `POST /api/units/<id>/read-next`) — each part is about 15 pages and becomes one round of up to 5 topics; questions are written only for the round the student is on. Learner's request: most of their PDFs are 80+ pages, and the free AI limits fit about 15 pages per request. The phone now reads up to about 400,000 characters (≈250 pages), with page breaks marked.
 
 ## Decisions and Open Issues
 Learner choices:
