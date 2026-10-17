@@ -21,7 +21,7 @@ async function timed(label: string, model: string, extra: Record<string, unknown
         temperature: 0,
         ...extra,
       }),
-      signal: AbortSignal.timeout(60_000),
+      signal: AbortSignal.timeout(50_000),
     });
     const data = await res.json().catch(() => ({}));
     const msg = data?.choices?.[0]?.message ?? {};
@@ -46,11 +46,14 @@ export async function GET() {
   } catch (e) {
     nemotron = [String(e)];
   }
+  const off = { chat_template_kwargs: { enable_thinking: false } };
+  const sys = "Answer with JSON only.";
   const runs = await Promise.all([
-    timed("default", model, {}, "Answer with JSON only."),
-    timed("no_think tag", model, {}, "/no_think Answer with JSON only."),
-    timed("thinking off flag", model, { chat_template_kwargs: { enable_thinking: false } }, "Answer with JSON only."),
-    timed("detailed thinking off", model, {}, "detailed thinking off. Answer with JSON only."),
+    timed("lightning, thinking off", model, off, sys),
+    timed("nano 3", "nvidia/nemotron-nano-3-30b-a3b", off, sys),
+    timed("super 3", "nvidia/nemotron-3-super-120b-a12b", off, sys),
+    timed("llama nemotron 70b", "nvidia/llama-3.1-nemotron-70b-instruct", {}, sys),
+    timed("llama nemotron 51b", "nvidia/llama-3.1-nemotron-51b-instruct", {}, sys),
   ]);
   const out = { model, nemotron_models: nemotron, runs };
   console.log("DIAG", JSON.stringify(out));
