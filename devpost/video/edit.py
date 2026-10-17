@@ -53,9 +53,10 @@ SEGS = json.load(open(f"{ED}/plan.json")) if os.path.exists(f"{ED}/plan.json") e
 if SEGS is None:
     sys.exit("write plan.json first")
 
+CINE = f"{S}/cine/studypal-intro-cinematic.mp4"  # the chosen intro (the 2D one is intro/studypal-intro.mp4)
 clips = [f"{INTRO}/studypal-intro-video.mp4"]
 if not os.path.exists(clips[0]):
-    run("ffmpeg", "-y", "-i", f"{INTRO}/studypal-intro.mp4", "-an", "-c:v", "libx264", "-crf", "18", "-r", str(FPS), clips[0])
+    run("ffmpeg", "-y", "-i", CINE, "-an", "-c:v", "libx264", "-crf", "18", "-r", str(FPS), clips[0])
 
 for i, s in enumerate(SEGS):
     out_len = s["out"][1] - s["out"][0]
@@ -81,7 +82,7 @@ for i, s in enumerate(SEGS):
 
 # 4. Outro: the logo scene from the intro animation.
 outro = f"{ED}/outro.mp4"
-run("ffmpeg", "-y", "-ss", "35.2", "-t", "7.5", "-i", f"{INTRO}/studypal-intro.mp4", "-an", "-vf", "fade=t=out:st=6.6:d=0.9",
+run("ffmpeg", "-y", "-ss", "35.2", "-t", "7.5", "-i", CINE, "-an", "-vf", "fade=t=out:st=6.6:d=0.9",
     "-c:v", "libx264", "-crf", "18", "-r", str(FPS), outro)
 clips.append(outro)
 
