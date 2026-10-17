@@ -272,8 +272,7 @@ export function validLesson(l: RawLesson): boolean {
     typeof l.intro === "string" &&
     Array.isArray(l.steps) &&
     l.steps.length >= 2 &&
-    l.steps.every((s) => s && typeof s.text === "string") &&
-    Array.isArray(l.check)
+    l.steps.every((s) => s && typeof s.text === "string")
   );
 }
 

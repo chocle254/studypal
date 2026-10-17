@@ -45,7 +45,7 @@ function shape(raw: RawLesson, style: Style, quick: boolean, idPrefix: string, c
         ...(code ? { code } : {}),
       };
     }),
-    check: toQuestions(raw.check ?? [], idPrefix).slice(0, checks),
+    check: toQuestions(Array.isArray(raw.check) ? raw.check : [], idPrefix).slice(0, checks),
   };
 }
 
@@ -133,6 +133,14 @@ export async function POST(req: Request) {
       mode === "fix" ? `t${index}r${round}x` : `t${index}c${style[0]}`,
       mode === "fix" ? 5 : 3,
     );
+
+    // If a long reply was cut off before its questions, reuse questions from the first test so the
+    // lesson can still be checked (the path and the final test depend on it).
+    const need = mode === "fix" ? 5 : mode === "full" && !quick ? 3 : 0;
+    if (lesson.check.length < need) {
+      const extra = topic.baseline.filter((q) => !lesson.check.some((c) => c.prompt === q.prompt));
+      lesson.check = [...lesson.check, ...extra.map((q, i) => ({ ...q, id: `${q.id}r${i}` }))].slice(0, need);
+    }
 
     // Re-read before saving so nothing written meanwhile is lost.
     const fresh = (await getUnit(unitId, student))!;
