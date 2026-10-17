@@ -2,7 +2,7 @@
 import type { NextRequest } from "next/server";
 import { deleteUnit, getUnit, listAttempts, listHome } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
-import type { PublicUnit } from "@/lib/types";
+import type { PublicUnit, Style } from "@/lib/types";
 import { splitParts } from "@/lib/parts";
 import { pagesRead } from "@/lib/reading";
 
@@ -33,6 +33,8 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/units/[id]">
       can_read_more: !unit.reached_current && (unit.parts_read ?? 1) < parts.length,
       pages_read: pagesRead(parts, unit.parts_read ?? 1),
       progress: unit.topics.map(() => ({})),
+      plan: Array.isArray(unit.plan) ? unit.plan : null,
+      lessons: unit.topics.map((t) => Object.keys(t.lessons ?? {}) as Style[]),
     };
     // Latest score of each kind of test, per topic.
     for (const a of await listAttempts([unit.id])) {

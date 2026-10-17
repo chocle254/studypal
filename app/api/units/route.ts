@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       topics: read.topics,
       parts_read: read.partsRead,
       reached_current: read.reachedCurrent,
+      plan: null,
     });
     return Response.json({ id: row.id, topics: read.topics.map((t) => t.title) });
   } catch (e) {

@@ -21,6 +21,7 @@ export interface LessonStep {
 
 export interface Lesson {
   style: Style;
+  quick?: boolean; // a short brush-through for a topic the student already knows
   intro: string;
   steps: LessonStep[];
   check: Question[]; // the short topic check after the lesson
@@ -46,6 +47,7 @@ export interface Unit {
   style: Style | null;
   topics: Topic[];
   parts_read: number; // how many parts of the PDF the AI has read so far
+  plan: number[] | null; // the topic indices the student chose to learn, in order
   reached_current: boolean; // the topic the student said they're at has been found; stop reading further
   created_at: string;
 }
@@ -111,6 +113,8 @@ export interface PublicUnit {
   can_read_more: boolean;
   pages_read: string | null; // e.g. "1–15 of 80"
   progress: TopicProgress[]; // one per topic
+  plan: number[] | null;
+  lessons: Style[][]; // per topic: the styles a lesson has already been written in
 }
 
 // How a student did on each topic, by kind of test (latest attempt of each kind).
@@ -131,3 +135,18 @@ export interface MarkedAnswer {
   score: number;
   feedback: string;
 }
+
+// What the phone receives of a lesson: the check questions come without their answers.
+export interface PublicLesson {
+  style: Style;
+  quick: boolean;
+  intro: string;
+  steps: LessonStep[];
+  check: PublicQuestion[];
+}
+
+export const STYLES: { id: Style; name: string; blurb: string; sample: string }[] = [
+  { id: "five", name: "Like I'm 5", blurb: "Tiny words, everyday stories", sample: "A foundation is like the big shoes a house wears so it doesn't fall over." },
+  { id: "gossip", name: "Gossip", blurb: "Chatty and dramatic, still correct", sample: "Okay so, the walls were cracking and guess who was to blame? The foundation." },
+  { id: "nerd", name: "Nerd", blurb: "Precise terms, deeper detail", sample: "Foundations transfer structural loads to soil with adequate bearing capacity." },
+];

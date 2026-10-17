@@ -10,7 +10,10 @@ import Preparing from "@/components/Preparing";
 import { prepareTopics } from "@/lib/prepare";
 import { roundCount, roundTopics } from "@/lib/batches";
 import TestView from "@/components/TestView";
-import Results from "@/components/Results";
+import Results, { learningPlan, STRONG } from "@/components/Results";
+import LearnSetup from "@/components/LearnSetup";
+import LessonView from "@/components/LessonView";
+import { STYLES, type Style } from "@/lib/types";
 
 // The unit screen: the rounds read so far, each with its topics.
 // The test flow is added in slice 3.
@@ -25,6 +28,20 @@ export default function UnitView() {
   const [prepError, setPrepError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [lesson, setLesson] = useState<{ topic: number; quick: boolean } | null>(null);
+  const [changingStyle, setChangingStyle] = useState(false);
+
+  async function savePlan(style: Style, plan: number[]) {
+    if (!unit) return;
+    const others = (unit.plan ?? []).filter((i) => !plan.includes(i));
+    await fetch(`/api/units/${unit.id}/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student: getStudentId(), style, plan: [...others, ...plan] }),
+    });
+    setChangingStyle(false);
+    await load();
+  }
 
   function load() {
     return fetch(`/api/units/${id}?student=${getStudentId()}`)
@@ -113,6 +130,32 @@ export default function UnitView() {
   const baselineDone = roundIdx.filter((n) => unit.progress[n]?.baseline !== undefined);
   const baselineComplete = roundIdx.length > 0 && baselineDone.length === roundIdx.length;
 
+  const roundResults = roundIdx.map((n) => ({ index: n, title: unit.topics[n].title, score: unit.progress[n]?.baseline ?? 0 }));
+  const allStrong = baselineComplete && roundResults.every((t) => t.score >= STRONG);
+  const planForRound = (unit.plan ?? []).filter((i) => roundIdx.includes(i));
+  const needsSetup = baselineComplete && (changingStyle || (!allStrong && (!unit.style || planForRound.length === 0)));
+
+  if (lesson && unit.style) {
+    return (
+      <LessonView
+        unitId={unit.id}
+        topic={lesson.topic}
+        title={unit.topics[lesson.topic].title}
+        keyParts={unit.topics[lesson.topic].key_parts}
+        style={unit.style}
+        quick={lesson.quick}
+        onDone={async () => {
+          setLesson(null);
+          await load();
+        }}
+        onExit={async () => {
+          setLesson(null);
+          await load();
+        }}
+      />
+    );
+  }
+
   if (testing) {
     return (
       <TestView
@@ -158,10 +201,58 @@ export default function UnitView() {
         {unit.pages_read ? ` · pages ${unit.pages_read} read` : unit.parts_total > 1 ? ` · part ${unit.parts_read} of ${unit.parts_total} read` : ""}
       </p>
 
-      {baselineComplete && (
-        <Results
-          topics={roundIdx.map((n) => ({ index: n, title: unit.topics[n].title, score: unit.progress[n].baseline ?? 0 }))}
+      {baselineComplete && <Results topics={roundResults} />}
+
+      {needsSetup && (
+        <LearnSetup
+          topics={roundResults}
+          suggested={learningPlan(roundResults).order.map((t) => t.index)}
+          currentStyle={unit.style}
+          allowEmpty={allStrong}
+          onSave={savePlan}
         />
+      )}
+
+      {baselineComplete && !needsSetup && (
+        <div className="mt-6 rounded-2xl bg-surface border border-line p-5 animate-rise">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted">Your learning path</p>
+            {unit.style && (
+              <button onClick={() => setChangingStyle(true)} className="text-xs text-sage font-semibold">
+                {STYLES.find((x) => x.id === unit.style)?.name} · change
+              </button>
+            )}
+          </div>
+          {planForRound.length > 0 && (
+            <ol className="mt-3 space-y-2">
+              {planForRound.map((i, n) => {
+                const learned = unit.style ? unit.lessons[i]?.includes(unit.style) : false;
+                return (
+                  <li key={i} className="flex items-center gap-3">
+                    <span className={`w-7 h-7 shrink-0 rounded-full grid place-items-center text-sm font-bold ${learned ? "bg-sage text-bg" : "bg-clay-soft"}`}>
+                      {learned ? "✓" : n + 1}
+                    </span>
+                    <span className="flex-1 text-sm font-semibold">{unit.topics[i].title}</span>
+                    <button onClick={() => setLesson({ topic: i, quick: false })}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-bold ${learned ? "border border-line" : "bg-sage text-bg"}`}>
+                      {learned ? "Again" : "Learn"}
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          {roundResults.filter((t) => t.score >= STRONG && !planForRound.includes(t.index)).map((t) => (
+            <div key={t.index} className="mt-3 rounded-xl bg-sage-soft p-3 text-sm">
+              <p><span className="font-bold">{t.title}:</span> you are great in this topic, we don&apos;t need to spend time on it.</p>
+              <button
+                onClick={() => (unit.style ? setLesson({ topic: t.index, quick: true }) : setChangingStyle(true))}
+                className="mt-2 text-sage font-bold underline underline-offset-4">
+                Brush through it anyway
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       {Array.from({ length: rounds }, (_, r) => (

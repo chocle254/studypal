@@ -166,3 +166,71 @@ Return ONLY this JSON:
 {"results":[{"id":"...","score":1,"feedback":"..."}]}`,
   };
 }
+
+// ---------- 4. Teach a topic in the chosen style ----------
+
+export const STYLE_GUIDES: Record<string, string> = {
+  five: `Explain like the student is 5 years old. Tiny everyday words, short sentences. Use home and family examples
+(a house, a dog guarding a compound, a kitchen, a football team). Replace every technical name with a simple picture
+first, then give the real name once in brackets.`,
+  gossip: `Explain like an excited friend sharing gossip: chatty, dramatic, "okay so, guess what…", characters and drama.
+The facts must stay 100% correct; the drama is only in how it's told.`,
+  nerd: `Explain like an enthusiastic expert: precise technical terms, how and why in more depth, one surprising fun fact.
+Still clear and step by step.`,
+};
+
+export interface RawLesson {
+  intro: string;
+  steps: { title: string; text: string; svg?: string }[];
+  check: RawQuestion[];
+}
+
+export function lessonPrompt(p: {
+  unit: string;
+  topic: { title: string; key_parts: string[]; notes: string };
+  style: string;
+  mistakes: string[]; // questions the student got wrong or partly wrong
+  quick: boolean;
+}) {
+  const steps = p.quick ? "2 to 3 steps (a quick brush-through: the student already knows this topic well)" : "4 to 6 steps";
+  return {
+    system:
+      "You are Study Pal, a brilliant, kind teacher. You make hard ideas simple and memorable, and you never make the student feel stupid. You answer with JSON only.",
+    user: `Unit: ${p.unit}
+Topic: ${p.topic.title}
+Key parts: ${p.topic.key_parts.join("; ")}
+Topic notes (from the student's own material): ${p.topic.notes}
+${p.mistakes.length ? `In the first test, the student struggled with:\n${p.mistakes.map((m) => `- ${m}`).join("\n")}\nFocus on these ideas.` : ""}
+
+Teaching style: ${STYLE_GUIDES[p.style] ?? STYLE_GUIDES.five}
+
+Teach this topic in ${steps}. Easy English. Go step by step: each step builds on the last.
+Include at least one real-life example or analogy the student can relate to (for example: a white blood cell is like a dog
+that chases an intruder out of the compound).
+For each step:
+- "title": a few words
+- "text": 2 to 4 short sentences
+- "svg": a simple diagram that helps the idea land. Rules: start with <svg and use viewBox="0 0 320 200"; only basic shapes
+  (rect, circle, ellipse, line, path, polygon) and <text>; at most 6 short text labels (font-size 12 or more); soft colors only:
+  #6f9282 (sage), #c48f72 (clay), #8ea7b5 (sky), #dfe8e2, #f0e2d8, #e0e8ec, and #2f3532 for text and outlines; no scripts,
+  no images, no links. Keep it simple and clearly labelled.
+
+Then write "check": 3 short questions to check the student understood (2 "typed", 1 "choice" with 4 options),
+each with a short model "answer". For "choice", the answer must be exactly one of the options.
+Use only facts from the topic notes.
+
+Return ONLY this JSON:
+{"intro":"one friendly sentence","steps":[{"title":"...","text":"...","svg":"<svg ...>...</svg>"}],"check":[{"part":"...","type":"typed","prompt":"...","answer":"..."}]}`,
+  };
+}
+
+export function validLesson(l: RawLesson): boolean {
+  return (
+    !!l &&
+    typeof l.intro === "string" &&
+    Array.isArray(l.steps) &&
+    l.steps.length >= 2 &&
+    l.steps.every((s) => s && typeof s.text === "string") &&
+    Array.isArray(l.check)
+  );
+}

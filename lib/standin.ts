@@ -105,6 +105,27 @@ function standInMark(user: string) {
   };
 }
 
+// A simple lesson with a labelled diagram per step.
+function standInLesson(user: string) {
+  const title = user.match(/Topic: (.*)/)?.[1] ?? "this topic";
+  const parts = (user.match(/Key parts: (.*)/)?.[1] ?? "").split(/;\s*/).filter(Boolean);
+  const quick = /quick brush-through/.test(user);
+  const steps = (quick ? parts.slice(0, 2) : parts.slice(0, 4)).map((p, i) => ({
+    title: `Step ${i + 1}`,
+    text: `[stand-in] ${p}. Think of it like a house: every part has a job, and this one matters because it keeps things working.`,
+    svg: `<svg viewBox="0 0 320 200"><rect x="20" y="120" width="280" height="50" rx="10" fill="#dfe8e2" stroke="#2f3532"/><polygon points="60,120 160,40 260,120" fill="#f0e2d8" stroke="#2f3532"/><circle cx="${80 + i * 50}" cy="145" r="14" fill="#c48f72"/><text x="160" y="190" text-anchor="middle" font-size="13" fill="#2f3532">${p.slice(0, 30).replace(/[<&]/g, "")}</text></svg>`,
+  }));
+  return {
+    intro: `[stand-in] Let's make "${title}" easy.`,
+    steps: steps.length >= 2 ? steps : [...steps, { title: "Recap", text: "[stand-in] That's the big idea." }],
+    check: [
+      { part: parts[0] ?? title, type: "typed", prompt: `[stand-in] In one sentence, what is ${title}?`, answer: parts[0] ?? title },
+      { part: parts[1] ?? title, type: "typed", prompt: `[stand-in] Why does ${parts[1] ?? title} matter?`, answer: parts[1] ?? title },
+      { part: title, type: "choice", prompt: `[stand-in] Which is about ${title}?`, options: [parts[0] ?? title, "Cooking rice", "Football rules", "Weather"], answer: parts[0] ?? title },
+    ],
+  };
+}
+
 export async function standIn(opts: AskOptions): Promise<string> {
   // Optional pretend "thinking time", to try the waiting screens locally.
   const delay = Number(process.env.STANDIN_DELAY_MS || 0);
@@ -118,6 +139,8 @@ export async function standIn(opts: AskOptions): Promise<string> {
       return JSON.stringify(standInQuestions(opts.user));
     case "mark":
       return JSON.stringify(standInMark(opts.user));
+    case "lesson":
+      return JSON.stringify(standInLesson(opts.user));
     default:
       return "{}";
   }
