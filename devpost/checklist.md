@@ -31,7 +31,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
   Learner check: On your phone, tap plus, add a course and unit, pick a short PDF of yours, and choose the topic you're at. You should see the unit card on the home screen. Open it and check the topics look right for that material.
   Commit: `Add course and unit with PDF reading and AI topic analysis`
 
-- [ ] **3. You take the baseline test and see your strong and weak topics**
+- [x] **3. You take the baseline test and see your strong and weak topics**
   Becomes usable: Opening a unit starts the baseline test for the current round (up to 4 topics): one topic at a time, five questions, mostly typed, with a progress box of the other topics. Answers are marked by the AI, and the results screen shows strong and weak topics and overall understanding.
   Why now: This is the first half of the kernel, testing first. It's where early feedback shapes the rest of the build.
   PRD ref: `prd.md > Baseline mock test`, `prd.md > The Core Journey` (steps 5–6)
@@ -73,7 +73,7 @@ How checks work in this build: the code is built and checked in Claude's workspa
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 3 (baseline test and results on your phone)
+- [x] Early usable behavior explored — after slice 3 (baseline test and results on your phone). Feedback: questions were good but didn't walk through the whole topic → the 5 questions are now a structured tour (core idea, how it works, why it matters, apply it, a common mix-up), covering every key part; the bare percentage felt cold → results now give a gentle verdict ("Great understanding" … "A fresh start"), then where learning starts (from topic one if under 40%, otherwise only the weak topics), leading into the teaching-style choice.
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review

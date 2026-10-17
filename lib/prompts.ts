@@ -91,11 +91,20 @@ Topic: ${p.topic.title}
 Key parts: ${p.topic.key_parts.map((k, i) => `${i + 1}. ${k}`).join("  ")}
 Topic notes: ${p.topic.notes}
 
-Write two sets of 5 questions about this topic:
-- "baseline": the first test, before any teaching. Spread the 5 questions across the key parts.
-- "final": the last test, after teaching. Question N in "final" must cover the SAME key part as question N in "baseline", but ask it in a different way and structure (for example: explain it, apply it to a real-life situation, compare, or spot what's wrong). Never reuse the wording.
+Write two sets of 5 questions about this topic. Each set must work like a mini tour of the WHOLE topic, so that a
+student who can answer all 5 really understands it:
+1. The core idea: what it is, in plain words (easy).
+2. How it works or what it's made of (medium).
+3. Why it matters or why it's done that way (medium).
+4. Apply it: a short real-life situation the student has to reason about (harder).
+5. A "choice" question with 4 options that checks a common mix-up or misconception.
+Together the 5 questions must cover every key part listed above. Keep each question short and clear.
 
-In each set, make 4 questions "typed" (the student writes an answer in their own words) and 1 question "choice" (4 options).
+- "baseline": the first test, before any teaching.
+- "final": the last test, after teaching. Question N in "final" covers the SAME idea as question N in "baseline",
+  but asked in a different way and structure (a different example, a different angle). Never reuse the wording.
+
+Questions 1–4 are "typed" (the student answers in their own words); question 5 is "choice" (4 options).
 For every question give a short model "answer" (1 to 3 sentences). For "choice", the answer must be exactly one of the options.
 Use only facts from the topic notes.
 
