@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getStudentId } from "@/lib/student";
 import type { PublicUnit } from "@/lib/types";
@@ -13,6 +13,14 @@ import { roundCount, roundTopics } from "@/lib/batches";
 // The unit screen. For now it shows the topics the AI found; the test flow arrives in slice 3.
 export default function UnitView() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  async function removeUnit() {
+    const res = await fetch(`/api/units/${id}?student=${getStudentId()}`, { method: "DELETE" });
+    if (res.ok) router.push("/");
+    else setError("Couldn't delete this unit. Try again.");
+  }
   const [unit, setUnit] = useState<PublicUnit | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -135,6 +143,21 @@ export default function UnitView() {
 
       <div className="mt-6 rounded-2xl bg-clay-soft p-4 text-sm">
         Next up: a quick test to see what you already know. <span className="text-muted">(Coming in the next step.)</span>
+      </div>
+      <div className="mt-10 text-center">
+        {!confirmDelete ? (
+          <button onClick={() => setConfirmDelete(true)} className="text-sm text-muted underline underline-offset-4">
+            Wrong PDF? Delete this unit
+          </button>
+        ) : (
+          <div className="rounded-2xl border border-line p-4">
+            <p className="text-sm">Delete &ldquo;{unit.name}&rdquo; and its questions? You can add it again with the right PDF.</p>
+            <div className="mt-3 flex gap-2">
+              <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-line py-2.5 text-sm">Keep it</button>
+              <button onClick={removeUnit} className="flex-1 rounded-xl bg-clay text-bg py-2.5 text-sm font-bold">Delete</button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -168,6 +168,17 @@ export async function updateUnit(id: string, studentId: string, patch: Partial<U
   check(await sb().from("units").update(patch).eq("id", id).eq("student_id", studentId));
 }
 
+export async function deleteUnit(id: string, studentId: string): Promise<void> {
+  if (dbMode() === "local") {
+    const t = await readLocal();
+    t.units = t.units.filter((u) => !(u.id === id && u.student_id === studentId));
+    t.attempts = t.attempts.filter((a) => a.unit_id !== id);
+    await writeLocal(t);
+    return;
+  }
+  check(await sb().from("units").delete().eq("id", id).eq("student_id", studentId));
+}
+
 export async function addAttempt(a: Omit<Attempt, "id" | "created_at">): Promise<Attempt> {
   if (dbMode() === "local") {
     const t = await readLocal();

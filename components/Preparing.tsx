@@ -9,11 +9,13 @@ export default function Preparing({
   topics,
   done,
   phase,
+  note,
 }: {
   facts: string[];
   topics: string[]; // empty while the AI is still finding the topics
   done: Set<number>;
   phase: "reading" | "questions";
+  note?: string;
 }) {
   const [i, setI] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -46,6 +48,8 @@ export default function Preparing({
           </p>
         </div>
       </div>
+
+      {note && <p className="mt-4 rounded-xl bg-clay-soft px-4 py-3 text-sm">{note}</p>}
 
       {phase === "questions" && (
         <>

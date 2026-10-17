@@ -27,6 +27,7 @@ export default function AddPage() {
   const [pasted, setPasted] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [facts, setFacts] = useState<string[]>([]);
+  const [note, setNote] = useState<string | undefined>();
   const [topics, setTopics] = useState<string[]>([]);
   const [done, setDone] = useState<Set<number>>(new Set());
   const busy = useRef(false);
@@ -64,6 +65,12 @@ export default function AddPage() {
     }
 
     setFacts(pickFacts(text));
+    // Long PDFs (a whole book) are trimmed for the AI's free limits; say so honestly.
+    setNote(
+      text.length > 24_000
+        ? "This PDF is long, so Study Pal is reading its first part. For best results, add one chapter or set of notes at a time."
+        : undefined,
+    );
     setStage("reading");
 
     try {
@@ -92,7 +99,7 @@ export default function AddPage() {
   }
 
   if (stage === "reading" || stage === "questions") {
-    return <Preparing facts={facts} topics={topics} done={done} phase={stage} />;
+    return <Preparing facts={facts} topics={topics} done={done} phase={stage} note={note} />;
   }
 
   return (
