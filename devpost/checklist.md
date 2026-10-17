@@ -95,4 +95,5 @@ Activity mode:
 ## Revisions
 
 - Added `supabase/schema.sql`, `lib/types.ts`, `lib/standin.ts` and a local JSON stand-in database (used only when Supabase settings are missing) — needed to build and verify offline, since this workspace cannot reach NVIDIA or Supabase directly.
+- The server uses Supabase's publishable key (kept only in Vercel) with table policies allowing it to read and write, not the secret key — the learner couldn't reach the secret key from their Supabase login; agreed as a hackathon-only simplification, to switch back before real users.
 - Slice 1 status: built, verified locally, committed and pushed; live check waits on the Vercel settings being active (first deploy showed stand-in AI and local database).

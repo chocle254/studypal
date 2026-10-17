@@ -45,3 +45,10 @@ alter table students enable row level security;
 alter table courses enable row level security;
 alter table units enable row level security;
 alter table attempts enable row level security;
+
+-- Hackathon setup (optional): if the server uses the publishable key instead of the secret key,
+-- these policies let it read and write. Remove them when switching to the secret key.
+-- create policy "studypal server access" on students for all to anon using (true) with check (true);
+-- create policy "studypal server access" on courses for all to anon using (true) with check (true);
+-- create policy "studypal server access" on units for all to anon using (true) with check (true);
+-- create policy "studypal server access" on attempts for all to anon using (true) with check (true);

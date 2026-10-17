@@ -154,6 +154,8 @@ studypal/
 - **Typed answers are marked in one AI call per topic** — to stay inside the free limits.
 - **One demo unit of about three topics** — to keep the demo short and the AI calls low.
 
+- **The publishable key with table policies** instead of the secret key on the server — the learner's Supabase login couldn't open the project's secret key. The key stays only in Vercel; anyone holding it could read Study Pal's data, so switch to the secret key before real users.
+
 ## Decisions and Open Issues
 Learner choices:
 - Vercel for hosting, Supabase for data, Nemotron for the AI, a switch to paid AI when users grow.
