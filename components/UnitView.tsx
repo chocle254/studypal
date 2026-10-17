@@ -9,6 +9,8 @@ import { Artwork } from "@/components/UnitCard";
 import Preparing from "@/components/Preparing";
 import { prepareTopics } from "@/lib/prepare";
 import { roundCount, roundTopics } from "@/lib/batches";
+import TestView from "@/components/TestView";
+import Results from "@/components/Results";
 
 // The unit screen: the rounds read so far, each with its topics.
 // The test flow is added in slice 3.
@@ -22,6 +24,7 @@ export default function UnitView() {
   const [done, setDone] = useState<Set<number>>(new Set());
   const [prepError, setPrepError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   function load() {
     return fetch(`/api/units/${id}?student=${getStudentId()}`)
@@ -101,7 +104,34 @@ export default function UnitView() {
   }
 
   const rounds = roundCount(unit.topics);
-  const currentRound = Math.max(0, rounds - 1); // the latest round read; the test flow refines this in slice 3
+  // The round the student is on: the first one whose final test isn't finished.
+  const firstOpen = Array.from({ length: rounds }, (_, r) => r).find((r) =>
+    roundTopics(r, unit.topics).some((n) => unit.progress[n]?.final === undefined),
+  );
+  const currentRound = firstOpen ?? Math.max(0, rounds - 1);
+  const roundIdx = roundTopics(currentRound, unit.topics);
+  const baselineDone = roundIdx.filter((n) => unit.progress[n]?.baseline !== undefined);
+  const baselineComplete = roundIdx.length > 0 && baselineDone.length === roundIdx.length;
+
+  if (testing) {
+    return (
+      <TestView
+        unitId={unit.id}
+        round={currentRound}
+        kind="baseline"
+        alreadyDone={baselineDone}
+        onFinished={async () => {
+          await load();
+          setTesting(false);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onExit={async () => {
+          await load();
+          setTesting(false);
+        }}
+      />
+    );
+  }
 
   if (busy) {
     return (
@@ -127,6 +157,12 @@ export default function UnitView() {
         {unit.topics.length} topic{unit.topics.length === 1 ? "" : "s"} so far
         {unit.pages_read ? ` · pages ${unit.pages_read} read` : unit.parts_total > 1 ? ` · part ${unit.parts_read} of ${unit.parts_total} read` : ""}
       </p>
+
+      {baselineComplete && (
+        <Results
+          topics={roundIdx.map((n) => ({ index: n, title: unit.topics[n].title, score: unit.progress[n].baseline ?? 0 }))}
+        />
+      )}
 
       {Array.from({ length: rounds }, (_, r) => (
         <div key={r} className="mt-5">
@@ -171,9 +207,19 @@ export default function UnitView() {
         </div>
       )}
 
-      <div className="mt-6 rounded-2xl bg-clay-soft p-4 text-sm">
-        Next up: a quick test to see what you already know. <span className="text-muted">(Coming in the next step.)</span>
-      </div>
+      {notReady === 0 && !baselineComplete && (
+        <div className="mt-6 rounded-2xl bg-clay-soft p-4">
+          <p className="font-bold">{baselineDone.length ? "Carry on with your test" : "First, what do you already know?"}</p>
+          <p className="mt-1 text-sm text-muted">
+            {roundIdx.length} topic{roundIdx.length === 1 ? "" : "s"}, 5 questions each. Answer in your own words; Study Pal
+            marks by meaning, not exact wording.
+          </p>
+          <button onClick={() => setTesting(true)}
+            className="mt-3 w-full rounded-xl bg-sage text-bg font-bold py-3 active:scale-[0.98] transition">
+            {baselineDone.length ? `Continue (${baselineDone.length}/${roundIdx.length} done)` : "Start the test"}
+          </button>
+        </div>
+      )}
 
       {unit.can_read_more && notReady === 0 && (
         <div className="mt-4 rounded-2xl border border-line p-4 text-sm">

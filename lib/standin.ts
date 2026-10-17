@@ -89,6 +89,22 @@ function standInQuestions(user: string) {
   return { baseline: make("baseline"), final: make("final") };
 }
 
+// Rough marking by shared words with the model answer.
+function standInMark(user: string) {
+  const blocks = user.split(/\n\n(?=ID: )/).filter((b) => b.startsWith("ID: "));
+  const words = (s: string) => new Set(s.toLowerCase().match(/[a-z]{4,}/g) ?? []);
+  return {
+    results: blocks.map((b) => {
+      const id = b.match(/ID: (.*)/)?.[1] ?? "";
+      const model = words(b.match(/Model answer: (.*)/)?.[1] ?? "");
+      const got = words(b.match(/Student answer: (.*)/)?.[1] ?? "");
+      const overlap = [...got].filter((w) => model.has(w)).length / Math.max(1, model.size);
+      const score = overlap >= 0.5 ? 1 : overlap >= 0.2 ? 0.5 : 0;
+      return { id, score, feedback: score === 1 ? "[stand-in] Good." : score ? "[stand-in] Partly right." : "[stand-in] Not quite." };
+    }),
+  };
+}
+
 export async function standIn(opts: AskOptions): Promise<string> {
   // Optional pretend "thinking time", to try the waiting screens locally.
   const delay = Number(process.env.STANDIN_DELAY_MS || 0);
@@ -100,6 +116,8 @@ export async function standIn(opts: AskOptions): Promise<string> {
       return JSON.stringify(standInAnalyze(opts.user));
     case "questions":
       return JSON.stringify(standInQuestions(opts.user));
+    case "mark":
+      return JSON.stringify(standInMark(opts.user));
     default:
       return "{}";
   }

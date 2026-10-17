@@ -110,4 +110,24 @@ export interface PublicUnit {
   parts_total: number;
   can_read_more: boolean;
   pages_read: string | null; // e.g. "1–15 of 80"
+  progress: TopicProgress[]; // one per topic
+}
+
+// How a student did on each topic, by kind of test (latest attempt of each kind).
+export interface TopicProgress {
+  baseline?: number; // 0..1
+  check?: number;
+  final?: number;
+}
+
+export interface TestTopic {
+  topic: number; // index in the unit's topics
+  title: string;
+  questions: PublicQuestion[];
+}
+
+export interface MarkedAnswer {
+  id: string;
+  score: number;
+  feedback: string;
 }

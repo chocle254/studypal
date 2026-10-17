@@ -125,3 +125,35 @@ export function toQuestions(list: RawQuestion[], prefix: string): Question[] {
     };
   });
 }
+
+// ---------- 3. Mark a topic's typed answers ----------
+
+export interface MarkResult {
+  id: string;
+  score: number; // 0, 0.5 or 1
+  feedback: string;
+}
+
+export function markPrompt(p: {
+  topic: string;
+  items: { id: string; prompt: string; answer: string; student: string }[];
+}) {
+  return {
+    system:
+      "You are Study Pal, a fair and kind examiner. You mark by MEANING, not exact wording: an answer in the student's own simple words that shows the right idea is correct. You answer with JSON only.",
+    user: `Topic: ${p.topic}
+
+Mark each student answer against the model answer.
+- score 1: shows the key idea correctly (own words, small slips are fine)
+- score 0.5: partly right, or right idea but missing an important piece
+- score 0: wrong, empty, "I don't know", or off-topic
+Give one short "feedback" sentence per answer (what was right or what was missing). Don't reveal anything beyond the model answer.
+
+${p.items
+  .map((x) => `ID: ${x.id}\nQuestion: ${x.prompt}\nModel answer: ${x.answer}\nStudent answer: ${x.student || "(no answer)"}`)
+  .join("\n\n")}
+
+Return ONLY this JSON:
+{"results":[{"id":"...","score":1,"feedback":"..."}]}`,
+  };
+}

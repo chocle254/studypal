@@ -1,6 +1,6 @@
 // GET /api/units/<id>?student=<id> — a unit for the phone, without any model answers.
 import type { NextRequest } from "next/server";
-import { deleteUnit, getUnit, listHome } from "@/lib/supabase";
+import { deleteUnit, getUnit, listAttempts, listHome } from "@/lib/supabase";
 import { isUuid } from "@/lib/student";
 import type { PublicUnit } from "@/lib/types";
 import { splitParts } from "@/lib/parts";
@@ -32,7 +32,13 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/units/[id]">
       parts_total: parts.length,
       can_read_more: !unit.reached_current && (unit.parts_read ?? 1) < parts.length,
       pages_read: pagesRead(parts, unit.parts_read ?? 1),
+      progress: unit.topics.map(() => ({})),
     };
+    // Latest score of each kind of test, per topic.
+    for (const a of await listAttempts([unit.id])) {
+      const p = out.progress[a.topic_index];
+      if (p && (a.kind === "baseline" || a.kind === "check" || a.kind === "final")) p[a.kind] = Number(a.score);
+    }
     return Response.json({ unit: out });
   } catch (e) {
     console.error("get unit failed", e);
