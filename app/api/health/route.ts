@@ -27,6 +27,14 @@ export async function GET() {
     result.ai = { ok: false, mode: aiMode(), model: aiModel(), error: String(e).slice(0, 300) };
   }
 
+  // Which settings this deployment can see (names only, never values).
+  const names = [
+    "NVIDIA_API_KEY", "NVIDIA_MODEL", "SUPABASE_URL", "SUPABASE_SERVICE_KEY",
+    "NEXT_PUBLIC_SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY",
+  ];
+  result.settings = Object.fromEntries(names.map((n) => [n, Boolean(process.env[n])]));
+  result.environment = process.env.VERCEL_ENV ?? "local";
+
   const ok = (result.database as { ok: boolean }).ok && (result.ai as { ok: boolean }).ok;
   return Response.json({ ok, ...result }, { status: ok ? 200 : 503 });
 }
