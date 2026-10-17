@@ -82,15 +82,15 @@ How checks work in this build: the code is built and checked in Claude's workspa
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap (brief recap tied to project evidence; the phone + GitHub route was offered, not reported as walked)
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
 - [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse (rendered at phone width in light and dark with scripts off; paths and anchors checked against commit 407d872)
 
-Activity and evidence:
+Activity and evidence: recap of the slice-4 lesson fix (shallow lessons and meaningless AI drawings traced to too little source material and freehand SVG; fixed with `sourceFor` and structured diagrams drawn by `Diagram`)
 Route and stops: LessonView `fetchLesson` → `app/api/lesson/route.ts` `POST` (`sourceFor`, `lessonPrompt`, `askJson`, `updateUnit`) → `cleanDiagram` / `Diagram` / `LessonText` (offered as a phone + GitHub walkthrough)
-Edit outcome:
-Reflection:
-Activity mode:
+Edit outcome: optional verdict-wording edit in `components/Results.tsx` offered; not taken
+Reflection: offered and answered (kept in the learner profile)
+Activity mode: recap
 
 ## Revisions
 
