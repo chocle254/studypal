@@ -2,7 +2,22 @@
 
 An AI study assistant for students. It tests what you already know, teaches only the topics you're weak in, in a style you pick (explain-like-I'm-5, gossip, or nerd), and shows your before-and-after score.
 
-Built for Devpost's **Build With AI: Basics** hackathon. The planning docs are in [`devpost/`](devpost/): [`scope.md`](devpost/scope.md), [`prd.md`](devpost/prd.md) and [`spec.md`](devpost/spec.md).
+**Live app:** https://studypal-murex.vercel.app (no sign-in; tap "Try a sample unit" to run the whole loop with a sample PDF)
+
+## Hackathon docs — Build With AI: Basics
+
+Built for Devpost's **Build With AI: Basics** hackathon, from an empty folder, using the Devpost Learn Skill Pack (flipped interaction, then plan-first). The planning documents, in the folder the skill pack creates:
+
+| Document | What it holds |
+|---|---|
+| [`devpost/scope.md`](devpost/scope.md) | The problem, who it's for, and the proof-of-concept boundary |
+| [`devpost/prd.md`](devpost/prd.md) | The core journey, every behavior, states and edge cases |
+| [`devpost/spec.md`](devpost/spec.md) | Stack, where it runs, components, data model, file structure |
+| [`devpost/checklist.md`](devpost/checklist.md) | The six build slices, learner checks, final review, and every revision made from testing |
+| [`devpost/app-map.html`](devpost/app-map.html) | A one-page map of how the code fits together |
+| [`devpost/video/`](devpost/video/) | Sources for the demo video (narration script, intro animation, recording and edit scripts) |
+
+The full commit history shows the build slice by slice, starting with the first commit on Oct 16, 2026.
 
 ## How it works
 
