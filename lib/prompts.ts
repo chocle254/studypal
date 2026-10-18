@@ -121,16 +121,51 @@ export function validQuestionSets(q: QuestionSets): boolean {
   return !!q && ok(q.baseline) && ok(q.final);
 }
 
+// Pull "A) … B) … C) …" options out of a prompt when the AI wrote them inline.
+function inlineOptions(prompt: string): { stem: string; options: string[] } | null {
+  const m = prompt.match(/^([\s\S]*?)\s*\(?A[).:]\s+([\s\S]+)$/);
+  if (!m) return null;
+  const options = m[2].split(/\s+\(?[B-F][).:]\s+/).map((o) => o.trim().replace(/[;,]$/, "")).filter(Boolean);
+  return options.length >= 2 ? { stem: m[1].trim(), options } : null;
+}
+
+// Find which option the AI's answer means: the text itself, a letter ("B"), or "B) text".
+function matchOption(answer: string, options: string[]): string | null {
+  const a = answer.trim();
+  const norm = (x: string) => x.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const exact = options.find((o) => norm(o) === norm(a));
+  if (exact) return exact;
+  const letter = a.match(/^\(?([A-F])\b[).:]?/);
+  if (letter) {
+    const o = options["ABCDEF".indexOf(letter[1])];
+    if (o) return o;
+  }
+  const loose = options.find((o) => norm(a).includes(norm(o)) || norm(o).includes(norm(a)));
+  return loose ?? null;
+}
+
 export function toQuestions(list: RawQuestion[], prefix: string): Question[] {
   return list.slice(0, 5).map((q, i) => {
-    const isChoice = q.type === "choice" && Array.isArray(q.options) && q.options.length >= 2;
+    let prompt = String(q.prompt);
+    let options = Array.isArray(q.options) ? q.options.map(String).filter(Boolean).slice(0, 5) : [];
+    // A multiple-choice question written with its options inside the prompt: lift them out.
+    if (options.length < 2) {
+      const inline = inlineOptions(prompt);
+      if (inline) {
+        prompt = inline.stem;
+        options = inline.options.slice(0, 5);
+      }
+    }
+    const answer = options.length >= 2 ? matchOption(String(q.answer), options) : null;
+    // Only keep it as multiple choice when the right answer is one of the options; otherwise ask it as typed.
+    const isChoice = options.length >= 2 && !!answer;
     return {
       id: `${prefix}${i + 1}`,
       part: String(q.part ?? ""),
       type: isChoice ? "choice" : "typed",
-      prompt: String(q.prompt),
-      ...(isChoice ? { options: q.options!.map(String).slice(0, 5) } : {}),
-      answer: String(q.answer),
+      prompt: isChoice ? prompt : String(q.prompt),
+      ...(isChoice ? { options } : {}),
+      answer: isChoice ? answer! : String(q.answer),
     };
   });
 }

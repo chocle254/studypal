@@ -31,6 +31,31 @@ export default function AddPage() {
   const [done, setDone] = useState<Set<number>>(new Set());
   const busy = useRef(false);
 
+  const [sample, setSample] = useState(false);
+
+  // "Try a sample unit": fill in a ready-made course, unit and PDF so anyone can try the whole loop.
+  async function useSample() {
+    try {
+      const res = await fetch("/sample/intro-to-machine-learning.pdf");
+      const blob = await res.blob();
+      setFile(new File([blob], "intro-to-machine-learning.pdf", { type: "application/pdf" }));
+      setCourse((c) => c || "Computer Science");
+      setLevel((l) => l || "Year 2");
+      setUnit("Intro to Machine Learning");
+      setPasteMode(false);
+      setSample(true);
+      setError(null);
+      setStage("unit");
+    } catch {
+      setError("Couldn't load the sample. Check your connection.");
+    }
+  }
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("sample")) useSample();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     fetch(`/api/home?student=${getStudentId()}`)
       .then((r) => r.json())
@@ -133,10 +158,18 @@ export default function AddPage() {
           <button className="w-full rounded-xl bg-sage text-bg font-bold py-3.5 active:scale-[0.98] transition">
             Next
           </button>
+          <button type="button" onClick={useSample} className="w-full text-sm text-sage font-semibold py-2">
+            No PDF handy? Try a sample unit
+          </button>
         </form>
       ) : (
         <form onSubmit={submit} className="mt-6 space-y-4">
           <p className="text-sm text-muted">{course}{level ? ` · ${level}` : ""}</p>
+          {sample && (
+            <p className="rounded-xl bg-sage-soft px-4 py-3 text-sm">
+              Sample unit ready: a short 2-page PDF on machine learning. Tap <span className="font-bold">Read my unit</span> to try the whole journey.
+            </p>
+          )}
           <label className="block">
             <span className="text-sm font-semibold">Unit name</span>
             <input className={`${field} mt-1`} value={unit} onChange={(e) => setUnit(e.target.value)}

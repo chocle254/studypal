@@ -160,7 +160,7 @@ export interface PublicLesson {
 }
 
 export const STYLES: { id: Style; name: string; blurb: string; sample: string }[] = [
-  { id: "five", name: "Like I'm 5", blurb: "Tiny words, everyday stories", sample: "A foundation is like the big shoes a house wears so it doesn't fall over." },
-  { id: "gossip", name: "Gossip", blurb: "Chatty and dramatic, still correct", sample: "Okay so, the walls were cracking and guess who was to blame? The foundation." },
-  { id: "nerd", name: "Nerd", blurb: "Precise terms, deeper detail", sample: "Foundations transfer structural loads to soil with adequate bearing capacity." },
+  { id: "five", name: "Like I'm 5", blurb: "Tiny words, everyday stories", sample: "Your heart is like a little pump that pushes blood all around your body, all day long." },
+  { id: "gossip", name: "Gossip", blurb: "Chatty and dramatic, still correct", sample: "Okay so, the heart never takes a day off, and guess who depends on it? Literally everyone." },
+  { id: "nerd", name: "Nerd", blurb: "Precise terms, deeper detail", sample: "The ventricles contract to drive oxygenated blood through the systemic circulation." },
 ];

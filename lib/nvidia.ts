@@ -66,6 +66,21 @@ export function aiModel(): string {
   );
 }
 
+// Backup models on the same key. Each Groq model has its own daily allowance, so when the main one
+// runs out for the day, calls move to the next one. Settable with AI_FALLBACK_MODELS (comma-separated).
+const FALLBACKS = (process.env.AI_FALLBACK_MODELS ?? (aiProvider() === "groq" ? "openai/gpt-oss-120b" : ""))
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+const outUntil = new Map<string, number>(); // model → time its daily limit should have room again
+
+function modelChain(): string[] {
+  const now = Date.now();
+  const all = [aiModel(), ...FALLBACKS.filter((m) => m !== aiModel())];
+  const usable = all.filter((m) => (outUntil.get(m) ?? 0) < now);
+  return usable.length ? usable : all;
+}
+
 // Remove any visible reasoning the model adds before its answer.
 function clean(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
@@ -76,8 +91,11 @@ export async function ask(opts: AskOptions): Promise<string> {
 
   let lastErr: unknown;
   let rateLimitWaits = 0;
+  const models = modelChain();
+  let m = 0;
   const attempts = 1 + (opts.retries ?? 1);
   for (let attempt = 0; attempt < attempts; attempt++) {
+    const model = models[Math.min(m, models.length - 1)];
     try {
       const res = await fetch(`${BASE}/chat/completions`, {
         method: "POST",
@@ -86,22 +104,31 @@ export async function ask(opts: AskOptions): Promise<string> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: aiModel(),
+          model,
           messages: [
             { role: "system", content: opts.system },
             { role: "user", content: opts.user },
           ],
           temperature: opts.temperature ?? 0.4,
           max_tokens: opts.maxTokens ?? 2048,
-          ...speedOptions(aiModel(), !!opts.json),
+          ...speedOptions(model, !!opts.json),
         }),
         signal: AbortSignal.timeout(opts.timeoutMs ?? 55_000),
       });
       if (res.status === 429) {
         // Free plans limit requests per minute. Wait as long as the provider asks (up to 20s), then try again.
         const asked = Number(res.headers.get("retry-after")) || 6;
+        const body = await res.text();
+        // Out of today's allowance: switch to the next model straight away.
+        if ((/per day|\(TPD\)|\(RPD\)/i.test(body) || asked > 60) && m < models.length - 1) {
+          outUntil.set(model, Date.now() + Math.min(asked, 3600) * 1000);
+          console.warn(`AI daily limit on ${model} (task ${opts.task}); switching to ${models[m + 1]}`);
+          m++;
+          attempt--;
+          continue;
+        }
         const wait = Math.min(20, asked);
-        if (rateLimitWaits === 0) console.warn(`AI 429 (task ${opts.task}): retry-after ${asked}s · ${(await res.text()).slice(0, 300)}`);
+        if (rateLimitWaits === 0) console.warn(`AI 429 on ${model} (task ${opts.task}): retry-after ${asked}s · ${body.slice(0, 300)}`);
         if (rateLimitWaits < 3) {
           rateLimitWaits++;
           console.warn(`AI rate limited (task ${opts.task}); waiting ${wait}s`);

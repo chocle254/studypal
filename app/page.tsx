@@ -48,6 +48,9 @@ export default function Home() {
         <p className="mt-1 text-sm text-muted max-w-xs">
           Tap the plus to add your course and the unit you&apos;re studying.
         </p>
+        <Link href="/add?sample=1" className="mt-6 text-sm font-semibold text-sage underline underline-offset-4">
+          No PDF handy? Try a sample unit
+        </Link>
       </section>
     );
   }
