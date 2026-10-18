@@ -1,0 +1,226 @@
+[
+ {
+  "name": "upload",
+  "out": [
+   45.4,
+   66.5
+  ],
+  "pieces": [
+   [
+    "home",
+    0.5,
+    "test",
+    0
+   ]
+  ],
+  "step": 1,
+  "title": [
+   "Upload your",
+   "study material"
+  ]
+ },
+ {
+  "name": "test",
+  "out": [
+   66.5,
+   83.4
+  ],
+  "pieces": [
+   [
+    "test",
+    0,
+    "results",
+    0
+   ]
+  ],
+  "step": 2,
+  "title": [
+   "Test first,",
+   "in your own words"
+  ]
+ },
+ {
+  "name": "gaps",
+  "out": [
+   83.4,
+   89.5
+  ],
+  "pieces": [
+   [
+    "results",
+    0,
+    "lesson-0",
+    0
+   ]
+  ],
+  "step": 3,
+  "title": [
+   "See your gaps,",
+   "pick a style"
+  ]
+ },
+ {
+  "name": "lesson",
+  "out": [
+   89.5,
+   102.9
+  ],
+  "pieces": [
+   [
+    "lesson-0",
+    0,
+    "ask",
+    0
+   ],
+   [
+    "code",
+    -3,
+    "code",
+    5
+   ]
+  ],
+  "step": 4,
+  "title": [
+   "Lessons from",
+   "your own PDF"
+  ]
+ },
+ {
+  "name": "ask",
+  "out": [
+   102.9,
+   111.8
+  ],
+  "pieces": [
+   [
+    "ask",
+    0,
+    "ask-done",
+    0
+   ],
+   [
+    "check-0",
+    6,
+    "check-0",
+    16
+   ]
+  ],
+  "step": 5,
+  "title": [
+   "Ask, check,",
+   "keep going"
+  ]
+ },
+ {
+  "name": "final",
+  "out": [
+   111.8,
+   118.7
+  ],
+  "pieces": [
+   [
+    "final",
+    0,
+    "final",
+    10
+   ]
+  ],
+  "step": 6,
+  "title": [
+   "Final test,",
+   "new questions"
+  ]
+ },
+ {
+  "name": "fix",
+  "out": [
+   118.7,
+   126.5
+  ],
+  "pieces": [
+   [
+    "fix",
+    0,
+    "fix",
+    12
+   ],
+   [
+    "retake",
+    0,
+    "retake",
+    8
+   ]
+  ],
+  "step": 7,
+  "title": [
+   "Still stuck?",
+   "Fix this topic"
+  ]
+ },
+ {
+  "name": "compare",
+  "out": [
+   126.5,
+   133.1
+  ],
+  "pieces": [
+   [
+    "compare",
+    0,
+    "compare",
+    5
+   ]
+  ],
+  "step": 8,
+  "title": [
+   "Before",
+   "and after"
+  ]
+ },
+ {
+  "name": "compare2",
+  "out": [
+   133.1,
+   141.6
+  ],
+  "pieces": [
+   [
+    "compare",
+    5,
+    "fix",
+    -0.3
+   ],
+   [
+    "compare-after-fix",
+    0,
+    "wrap",
+    0
+   ]
+  ],
+  "step": 8,
+  "title": [
+   "Before",
+   "and after"
+  ]
+ },
+ {
+  "name": "wrap",
+  "out": [
+   141.6,
+   157.7
+  ],
+  "pieces": [
+   [
+    "wrap",
+    0,
+    "end",
+    0
+   ]
+  ],
+  "step": 9,
+  "title": [
+   "Your progress,",
+   "your focus"
+  ]
+ }
+]

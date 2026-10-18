@@ -67,7 +67,7 @@ for i, s in enumerate(SEGS):
     for j, (b, e) in enumerate(src):
         plen = out_len * (e - b) / total_src
         speed = (e - b) / plen
-        badge = f"⏩ {speed:.0f}× faster · real AI, sped up" if speed >= 1.8 else None
+        badge = f"{speed:.0f}× speed · real AI, sped up" if speed >= 1.8 else None
         lab = f"{ED}/label_{i}_{j}.png"
         label_png(lab, s["step"], s["title"], badge)
         out = f"{ED}/seg_{i}_{j}.mp4"
@@ -82,7 +82,7 @@ for i, s in enumerate(SEGS):
 
 # 4. Outro: the logo scene from the intro animation.
 outro = f"{ED}/outro.mp4"
-run("ffmpeg", "-y", "-ss", "35.2", "-t", "7.5", "-i", CINE, "-an", "-vf", "fade=t=out:st=6.6:d=0.9",
+run("ffmpeg", "-y", "-ss", "34.9", "-t", "7.7", "-i", CINE, "-an", "-vf", "tpad=stop_mode=clone:stop_duration=1.8,fade=t=out:st=8.4:d=1.1",
     "-c:v", "libx264", "-crf", "18", "-r", str(FPS), outro)
 clips.append(outro)
 

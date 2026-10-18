@@ -65,8 +65,9 @@ cdp.on('Page.screencastFrame', async ({ data, metadata, sessionId }) => {
 const marks = [];
 const mark = (name) => { marks.push({ name, t: Date.now() / 1000 }); console.log('mark', name, new Date().toISOString().slice(11, 19)); };
 const pause = (ms) => page.waitForTimeout(ms);
-const tap = async (sel) => { const l = page.locator(sel).first(); await l.waitFor({ timeout: 60000 }); await l.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {}); await pause(250); await l.tap({ force: true }); };
-const type = async (sel, text, delay = 28) => { const l = page.locator(sel).first(); await l.tap(); await l.pressSequentially(text, { delay }); };
+const center = (l) => l.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' })).catch(() => {});
+const tap = async (sel) => { const l = page.locator(sel).first(); await l.waitFor({ timeout: 60000 }); await center(l); await pause(350); await l.tap({ force: true }); };
+const type = async (sel, text, delay = 28) => { const l = page.locator(sel).first(); await center(l); await l.tap({ force: true }); await l.pressSequentially(text, { delay }); };
 const scrollBy = async (px, steps = 12) => { for (let i = 0; i < steps; i++) { await page.mouse.wheel(0, px / steps); await pause(40); } };
 const toTop = () => page.evaluate(() => window.scrollTo({ top: 0, behavior: 'smooth' }));
 
@@ -79,7 +80,7 @@ async function answerAll(topic, good) {
     const prompt = await li.locator('p').first().innerText();
     const ta = li.locator('textarea');
     if (await ta.count()) {
-      await li.scrollIntoViewIfNeeded();
+      await center(li);
       const text = good ? bestSentences(topic, prompt, 2) : ['Not sure, something about data?', 'I think it is about computers.', 'No idea.'][i % 3];
       await ta.tap();
       // type the first part visibly, then the rest quickly
@@ -91,7 +92,7 @@ async function answerAll(topic, good) {
       const opts = await li.locator('button').allInnerTexts();
       if (!opts.length) continue;
       const pick = good ? bestOption(topic, opts) : opts[opts.length - 1];
-      await li.locator('button', { hasText: pick }).first().tap();
+      const ob = li.locator('button', { hasText: pick }).first(); await center(ob); await pause(200); await ob.tap({ force: true });
       await pause(400);
     }
   }
@@ -159,6 +160,8 @@ const fact = page.locator('button:has-text("Tap if you already knew this")');
 if (await fact.count()) { await pause(1500); await fact.first().tap().catch(() => {}); }
 await page.waitForURL('**/unit/**', { timeout: 240000 });
 mark('unit');
+fs.writeFileSync('student.json', JSON.stringify(await page.evaluate(() => localStorage.getItem('studypal.student'))));
+fs.writeFileSync('unit-url.txt', page.url());
 await page.waitForSelector('button:has-text("Start the test")', { timeout: 240000 }); await pause(1500);
 await scrollBy(600, 12); await pause(1800); await toTop(); await pause(800);
 
@@ -179,7 +182,11 @@ await scrollBy(500, 14); await pause(2200); await scrollBy(600, 14); await pause
 
 // 4. Style
 mark('style');
-await tap('button:has-text("Gossip")'); await pause(900);
+for (let i = 0; i < 4 && !(await page.locator('button:has-text("Start learning")').count()); i++) {
+  const g = page.getByRole('button', { name: /^Gossip/ });
+  await center(g); await pause(700);
+  await g.tap({ force: true }); await pause(900);
+}
 await tap('button:has-text("Start learning")');
 await page.waitForSelector('text=Your learning path'); await pause(800);
 await page.locator('text=Your learning path').scrollIntoViewIfNeeded(); await pause(2500);
