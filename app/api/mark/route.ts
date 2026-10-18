@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     await addAttempt({
       unit_id: unitId,
       topic_index: topicIndex,
-      kind,
+      kind: kind === "retake" ? "quick" : kind, // retakes are stored as "quick" (allowed by the original table)
       score,
       detail: { answers, results: list },
     });

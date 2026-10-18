@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
         learned: idx.filter((i) => get(u.id, i, "check") !== undefined).length,
         finished: finished.length,
         before: avg(finished.map((i) => get(u.id, i, "baseline")!)),
-        after: avg(finished.map((i) => Math.max(get(u.id, i, "final")!, get(u.id, i, "retake") ?? 0))),
+        after: avg(finished.map((i) => Math.max(get(u.id, i, "final")!, get(u.id, i, "quick") ?? 0))),
       };
     });
 

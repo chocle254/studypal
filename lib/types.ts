@@ -72,6 +72,7 @@ export interface Course {
   created_at: string;
 }
 
+// "quick" holds retake scores (after the second pass on a weak topic); "retake" is accepted when reading.
 export type AttemptKind = "baseline" | "check" | "final" | "quick" | "retake";
 
 export interface Attempt {

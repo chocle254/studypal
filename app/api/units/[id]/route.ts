@@ -39,7 +39,9 @@ export async function GET(req: NextRequest, ctx: RouteContext<"/api/units/[id]">
     // Latest score of each kind of test, per topic.
     for (const a of await listAttempts([unit.id])) {
       const p = out.progress[a.topic_index];
-      if (p && (a.kind === "baseline" || a.kind === "check" || a.kind === "final" || a.kind === "retake")) p[a.kind] = Number(a.score);
+      if (!p) continue;
+      if (a.kind === "baseline" || a.kind === "check" || a.kind === "final") p[a.kind] = Number(a.score);
+      if (a.kind === "quick" || a.kind === "retake") p.retake = Number(a.score); // retakes are stored as "quick"
     }
     return Response.json({ unit: out });
   } catch (e) {

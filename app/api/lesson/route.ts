@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     };
     const mistakes =
       mode === "fix"
-        ? [...wrongIn("final", topic.final), ...wrongIn("retake", topic.fix?.check ?? [])]
+        ? [...wrongIn("final", topic.final), ...wrongIn("quick", topic.fix?.check ?? [])]
         : mode === "full"
           ? wrongIn("baseline", topic.baseline)
           : [];
@@ -125,7 +125,7 @@ export async function POST(req: Request) {
       validLesson,
     );
 
-    const round = attempts.filter((a) => a.kind === "retake").length + 1;
+    const round = attempts.filter((a) => a.kind === "quick").length + 1;
     const lesson = shape(
       raw,
       style,
