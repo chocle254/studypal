@@ -49,8 +49,16 @@
    [
     "results",
     0,
-    "lesson-0",
-    0
+    "results",
+    6,
+    1.4,
+    0.25
+   ],
+   [
+    "style",
+    0,
+    "style",
+    4
    ]
   ],
   "step": 3,
@@ -70,7 +78,9 @@
     "lesson-0",
     0,
     "ask",
-    0
+    0,
+    1.35,
+    0.12
    ],
    [
     "code",
@@ -142,7 +152,7 @@
     "fix",
     0,
     "fix",
-    12
+    10
    ],
    [
     "retake",
@@ -168,7 +178,9 @@
     "compare",
     0,
     "compare",
-    5
+    4,
+    1.4,
+    0.3
    ]
   ],
   "step": 8,
@@ -186,15 +198,9 @@
   "pieces": [
    [
     "compare",
-    5,
+    4,
     "fix",
     -0.3
-   ],
-   [
-    "compare-after-fix",
-    0,
-    "wrap",
-    0
    ]
   ],
   "step": 8,

@@ -52,16 +52,16 @@ const page = await ctx.newPage();
 const errs = [];
 page.on('pageerror', (e) => errs.push(String(e)));
 
-// Screencast at device resolution.
-const cdp = await ctx.newCDPSession(page);
+// Full-resolution frames (1170×2532): a screenshot loop running alongside the actions.
 const frames = [];
-let n = 0;
-cdp.on('Page.screencastFrame', async ({ data, metadata, sessionId }) => {
-  const f = `frames/f${String(n++).padStart(6, '0')}.jpg`;
-  fs.writeFileSync(f, Buffer.from(data, 'base64'));
-  frames.push({ f, t: metadata.timestamp });
-  await cdp.send('Page.screencastFrameAck', { sessionId }).catch(() => {});
-});
+let n = 0, capturing = false;
+async function captureLoop() {
+  while (capturing) {
+    const t = Date.now() / 1000;
+    const f = `frames/f${String(n++).padStart(6, '0')}.jpg`;
+    try { await page.screenshot({ path: f, type: 'jpeg', quality: 86 }); frames.push({ f, t }); } catch { /* page navigating */ }
+  }
+}
 const marks = [];
 const mark = (name) => { marks.push({ name, t: Date.now() / 1000 }); console.log('mark', name, new Date().toISOString().slice(11, 19)); };
 const pause = (ms) => page.waitForTimeout(ms);
@@ -81,7 +81,7 @@ async function answerAll(topic, good) {
     const ta = li.locator('textarea');
     if (await ta.count()) {
       await center(li);
-      const text = good ? bestSentences(topic, prompt, 2) : ['Not sure, something about data?', 'I think it is about computers.', 'No idea.'][i % 3];
+      const text = good ? bestSentences(topic, prompt, 3) : ['Not sure, something about data?', 'I think it is about computers.', 'No idea.'][i % 3];
       await ta.tap();
       // type the first part visibly, then the rest quickly
       const visible = text.slice(0, 70), rest = text.slice(70);
@@ -135,7 +135,7 @@ async function readLesson({ ask = null, copy = false, fast = false }) {
   }
 }
 
-await cdp.send('Page.startScreencast', { format: 'jpeg', quality: 88, maxWidth: 1170, maxHeight: 2532, everyNthFrame: 1 });
+capturing = true; const loop = captureLoop();
 
 // 1. Home
 mark('home');
@@ -221,7 +221,7 @@ await page.locator('button:has-text("Start the final test")').scrollIntoViewIfNe
 await tap('button:has-text("Start the final test")');
 for (let t = 0; t < 3; t++) {
   await page.waitForSelector('textarea, ol > li button', { timeout: 60000 }); await pause(1000);
-  await answerAll(t, t !== 2);
+  await answerAll(t, true);
   await tap('button:has-text("Next topic"), button:has-text("Finish the test")');
   await page.waitForSelector('text=Marking your answers…', { state: 'detached', timeout: 120000 }).catch(() => {});
   await pause(900);
@@ -235,11 +235,13 @@ if (await page.locator('button:has-text("Fix this topic")').count()) {
   mark('fix');
   await tap('button:has-text("Fix this topic")');
   await waitLesson();
+  const fixTitle = await page.locator('h1').first().innerText().catch(() => '');
+  const fixTopic = /supervised/i.test(fixTitle) ? 1 : /train|overfit/i.test(fixTitle) ? 2 : 0;
   await readLesson({ fast: true });
   mark('retake');
   await tap('button:has-text("Take the retake")');
   await page.waitForSelector('text=/Retake ·/'); await pause(800);
-  await answerAll(2, true);
+  await answerAll(fixTopic, true);
   await tap('button:has-text("Check my answers")');
   await page.waitForSelector('button:has-text("See my results")', { timeout: 120000 });
   await toTop(); await pause(2000);
@@ -258,7 +260,7 @@ await tap('button[aria-label="Pomodoro focus timer"]'); await pause(1000);
 await tap('button:has-text("Start focusing")'); await pause(3500);
 mark('end');
 
-await cdp.send('Page.stopScreencast');
+capturing = false; await loop;
 await pause(500);
 fs.writeFileSync('frames.json', JSON.stringify(frames));
 fs.writeFileSync('marks.json', JSON.stringify(marks));

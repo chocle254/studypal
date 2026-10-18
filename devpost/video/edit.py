@@ -23,10 +23,10 @@ if not os.path.exists(f"{ED}/phone.mp4"):
             f.write(f"file '{REC}/{fr['f']}'\nduration {max(0.001, nxt - fr['t']):.4f}\n")
         f.write(f"file '{REC}/{frames[-1]['f']}'\n")
     run("ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", f"{ED}/frames.txt", "-vf",
-        f"fps={FPS},scale={SW}:{SH}:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-crf", "16", "-preset", "fast", f"{ED}/phone.mp4")
+        f"fps={FPS},scale={SW*2}:{SH*2}:flags=lanczos,format=yuv420p", "-c:v", "libx264", "-crf", "14", "-preset", "fast", f"{ED}/phone.mp4")
 
 # 2. Side labels.
-def label_png(path, step, title, badge=None):
+def label_png(path, step, title, badge=None, badge_x=1300):
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     big = ImageFont.truetype(FONT, 54); big.set_variation_by_axes([900])
@@ -39,7 +39,7 @@ def label_png(path, step, title, badge=None):
     if len(title) > 1: d.text((x, 584), title[1], font=big, fill="#6f9282")
     if badge:
         bw = d.textlength(badge, font=small) + 48
-        bx = 1300
+        bx = badge_x
         d.rounded_rectangle((bx, 470, bx + bw, 530), 30, fill="#f1e3da")
         d.text((bx + 24, 500), badge, font=small, fill="#2b302d", anchor="lm")
     im.save(path)
@@ -58,26 +58,51 @@ clips = [f"{INTRO}/studypal-intro-video.mp4"]
 if not os.path.exists(clips[0]):
     run("ffmpeg", "-y", "-i", CINE, "-an", "-c:v", "libx264", "-crf", "18", "-r", str(FPS), clips[0])
 
+from PIL import ImageFilter
+def zoom_assets(zoom):
+    """Plain background with a soft card shadow, and a rounded mask, for a zoomed-in screen of this size."""
+    w, h = round(SW * zoom), SH
+    x = (W - w) // 2
+    key = f"{zoom:.2f}"
+    bgp, mp = f"{ED}/bgz_{key}.png", f"{ED}/maskz_{key}.png"
+    if not os.path.exists(bgp):
+        bg = Image.new("RGB", (W, H), "#f1eee7"); d = ImageDraw.Draw(bg)
+        for (cx, cy, r, c) in [(300, 220, 260, "#dfe7e2"), (1660, 880, 320, "#f1e3da"), (1620, 170, 150, "#e0e8ec"), (230, 940, 170, "#f1e3da")]:
+            d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=c)
+        sh = Image.new("L", (W, H), 0)
+        ImageDraw.Draw(sh).rounded_rectangle((x - 8, SY + 14, x + w + 8, SY + h + 20), 40, fill=90)
+        bg.paste(Image.new("RGB", (W, H), "#2b302d"), (0, 0), sh.filter(ImageFilter.GaussianBlur(26)))
+        bg.save(bgp)
+        m = Image.new("L", (w, h), 0); ImageDraw.Draw(m).rounded_rectangle((0, 0, w - 1, h - 1), 36, fill=255); m.save(mp)
+    return bgp, mp, x, w
+
 for i, s in enumerate(SEGS):
     out_len = s["out"][1] - s["out"][0]
-    src = [(M[a] + da if isinstance(a, str) else a, M[b] + db if isinstance(b, str) else b) for (a, da, b, db) in s["pieces"]]
-    total_src = sum(e - b for b, e in src)
-    # share the slot between pieces by their source length
+    pieces = [list(p) + [1.0, 0.0][len(p) - 4:] if len(p) < 6 else list(p) for p in s["pieces"]]
+    src = [(M[p[0]] + p[1], M[p[2]] + p[3], p[4], p[5]) for p in pieces]
+    total_src = sum(e - b for b, e, _, _ in src)
     parts = []
-    for j, (b, e) in enumerate(src):
+    for j, (b, e, zoom, focus) in enumerate(src):
         plen = out_len * (e - b) / total_src
         speed = (e - b) / plen
         badge = f"{speed:.0f}× speed · real AI, sped up" if speed >= 1.8 else None
+        if zoom > 1.01:
+            bgp, mp, x, w = zoom_assets(zoom)
+            ch = f"ih/{zoom:.4f}"
+            crop = f"crop=iw:{ch}:0:{focus:.3f}*(ih-{ch}),scale={w}:{SH}:flags=lanczos"
+        else:
+            bgp, mp, x, w = f"{ED}/bg.png", f"{ED}/mask.png", SX, SW
+            crop = f"scale={SW}:{SH}:flags=lanczos"
         lab = f"{ED}/label_{i}_{j}.png"
-        label_png(lab, s["step"], s["title"], badge)
+        label_png(lab, s["step"], s["title"], badge, max(1300, x + w + 40))
         out = f"{ED}/seg_{i}_{j}.mp4"
-        run("ffmpeg", "-y", "-loop", "1", "-i", f"{ED}/bg.png", "-ss", f"{b:.3f}", "-t", f"{e - b:.3f}", "-i", f"{ED}/phone.mp4",
-            "-i", f"{ED}/mask.png", "-loop", "1", "-i", lab, "-filter_complex",
-            f"[1:v]setpts=(PTS-STARTPTS)/{speed:.5f},fps={FPS}[ph];[ph][2:v]alphamerge[pm];"
-            f"[0:v][pm]overlay={SX}:{SY}:shortest=1[bgph];[bgph][3:v]overlay=0:0,format=yuv420p[v]",
+        run("ffmpeg", "-y", "-loop", "1", "-i", bgp, "-ss", f"{b:.3f}", "-t", f"{e - b:.3f}", "-i", f"{ED}/phone.mp4",
+            "-i", mp, "-loop", "1", "-i", lab, "-filter_complex",
+            f"[1:v]setpts=(PTS-STARTPTS)/{speed:.5f},fps={FPS},{crop}[ph];[ph][2:v]alphamerge[pm];"
+            f"[0:v][pm]overlay={x}:{SY}:shortest=1[bgph];[bgph][3:v]overlay=0:0,format=yuv420p[v]",
             "-map", "[v]", "-t", f"{plen:.3f}", "-r", str(FPS), "-c:v", "libx264", "-crf", "18", "-preset", "fast", out)
         parts.append(out)
-        print(f"{s['name']}[{j}] src {e - b:.1f}s → {plen:.1f}s ({speed:.1f}×)")
+        print(f"{s['name']}[{j}] src {e - b:.1f}s → {plen:.1f}s ({speed:.1f}×){' zoom %.1f' % zoom if zoom > 1.01 else ''}")
     clips += parts
 
 # 4. Outro: the logo scene from the intro animation.
@@ -96,8 +121,8 @@ bars = int(dur / (4 * 60 / 90)) + 2
 if not os.path.exists(f"{ED}/beat-long.wav"):
     run("python3", f"{TTS}/beat.py", str(bars), f"{ED}/beat-long.wav")
 run("ffmpeg", "-y", "-i", f"{ED}/beat-long.wav", "-i", f"{TTS}/full/voice.wav", "-filter_complex",
-    "[1:a]aresample=44100,pan=stereo|c0=c0|c1=c0,volume=1.5,apad,asplit=2[v1][v2];[0:a]volume=0.42[m];"
-    "[m][v1]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=400[duck];"
+    "[1:a]aresample=44100,pan=stereo|c0=c0|c1=c0,volume=1.5,apad,asplit=2[v1][v2];[0:a]volume=0.85[m];"
+    "[m][v1]sidechaincompress=threshold=0.05:ratio=3:attack=30:release=500[duck];"
     f"[duck][v2]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.89,afade=t=out:st={dur - 2.5:.2f}:d=2.5[out]",
     "-map", "[out]", "-t", f"{dur:.3f}", f"{ED}/audio.wav")
 run("ffmpeg", "-y", "-i", f"{ED}/video-only.mp4", "-i", f"{ED}/audio.wav", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-shortest",
