@@ -181,9 +181,12 @@ DEMO = [  # (voice range, title, step, pieces)
 for (a, b), title, step, pieces in DEMO:
     add(phone(b - a, pieces, L(title, step=step)), v(a, b), b - a)
 # 4. How it was built.
-add(title_card(4.0), sil(4.0), 4.0)
+intro, _ = sf.read(f"{V3}/build-intro.wav")
+TD, DD = 3.6, 3.5  # title card, then each planning doc; the voice runs across all four
+part = title_card(TD)
 for name, title in [("scope", ["scope.md:", "what to build"]), ("prd", ["prd.md:", "how it behaves"]), ("spec", ["spec.md:", "how it's built"])]:
-    add(doc(f"{V3}/doc-{name}.png", 2.9, 520, 0, L(title, tag="Planned before any code")), sil(2.9), 2.9)
+    part += doc(f"{V3}/doc-{name}.png", DD, 560, 0, L(title, tag="Planned before any code"))
+add(part, np.concatenate([sil(0.3), intro]), TD + 3 * DD)
 line_len = len(build_line) / SR
 chk = doc(f"{V3}/doc-checklist.png", 5.2, 1500, 900, L(["Small slices,", "each tried on a phone"], tag="Then built step by step"))
 les = phone(line_len + 1.3 - 5.2, [P("code", -6, "code", 2)], L(["Lessons from", "your own pages"], tag="The hardest part"))
