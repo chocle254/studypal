@@ -8,6 +8,18 @@ status: approved
 An AI study assistant for students that tests what they already know, teaches only the topics they're weak in, in a fun style they choose, and shows a before-and-after score.
 Source: `scope.md > The Unique Kernel`, `scope.md > The Core Loop`, `scope.md > What "Working" Looks Like`.
 
+## What Changed During the Build
+This PRD is the plan approved before coding. Features added or changed while each slice was tried on a phone (all logged in `checklist.md > Revisions`, technical detail in `spec.md > What Changed During the Build`):
+- **Rounds.** A long PDF is read about 15 pages at a time; each part is one round of up to 5 topics: baseline test → lessons for weak topics → final test → before-and-after. "Read the next part" starts the next round.
+- **Final test per round**, unlocked only when every lesson in the round's path has its check done, so the before-and-after stays honest.
+- **Fix this topic.** On the before-and-after, any topic under 70% offers a second-pass lesson aimed at the final-test mistakes, explained another way, ending in a 5-question retake with new questions. If it is still weak, "Try it another way".
+- **Ask about this.** Every lesson step lets the student ask their own question, answered from their material in their chosen style.
+- **Go deeper.** The end of a lesson offers 3–4 harder sections.
+- **Lessons** teach the whole topic in 6–9 sections from the student's own pages, with numbered lists, simple diagrams the app draws, and copyable code examples for code topics.
+- **Courses menu and profile.** The menu lists courses and their units; the profile shows overall before-and-after, topics learned, final tests and today's focus sessions.
+- **Sample unit.** "No PDF handy? Try a sample unit" on the first screen, so anyone can try the full loop.
+- **Name:** Study Pal.
+
 ## The Core Journey
 1. A new student opens the app on their phone and sees an empty home screen with a plus button and the message "no units added yet" (`scope.md > What "Working" Looks Like`).
 2. They tap the plus button, enter their course and their level, and go to the next screen.

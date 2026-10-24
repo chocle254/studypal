@@ -38,6 +38,9 @@
   <h1>AI Study Pal <span style="font-weight:400;color:var(--mut)">(working title)</span></h1>
   <p class="tag">Technical spec. Status: approved. Markdown (<code>spec.md</code>) is the canonical version.</p>
 
+  <h2>What changed during the build</h2>
+  <div class="card"><p>The plan below was approved before coding. Changes made while each slice was tried on a phone (full list in <code>checklist.md</code> → Revisions):</p><ul><li><b>AI provider: Groq</b> (<code>openai/gpt-oss-20b</code>, falling back to <code>openai/gpt-oss-120b</code>), not Nemotron: NVIDIA's free endpoint queued 45–60 s per answer. Where this page says Nemotron, read “the AI provider”.</li><li>Long PDFs are read about 15 pages per part; each part is one round of up to 5 topics.</li><li>Diagrams are data (flow, cycle, compare, parts) the app draws itself; lessons have 6–9 sections, lists and code windows.</li><li>Final test per round; <b>Fix this topic</b> (second-pass lesson and 5-question retake), <b>Ask about this</b> (<code>/api/ask</code>), <b>Go deeper</b>.</li><li>Courses menu, profile (<code>/profile</code>) and a sample unit (<code>/add?sample=1</code>).</li></ul></div>
+
   <h2>How it works, in plain language</h2>
   <div class="card">A website that opens on a phone like an app. <b>Vercel</b> serves the screens and runs small server functions that hold the AI key. <b>Supabase</b> is a spreadsheet in the cloud that remembers courses, units, questions, lessons and scores. <b>Nemotron</b> is the AI that reads the unit, writes questions, marks typed answers and writes lessons. No sign-in: each phone makes a random secret ID. The PDF is read on the phone, and only its text goes to Supabase.</div>
 

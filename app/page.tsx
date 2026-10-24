@@ -34,7 +34,11 @@ export default function Home() {
 
   if (units.length === 0) {
     return (
-      <section className="mt-20 flex flex-col items-center text-center animate-rise">
+      <section className="mt-10 flex flex-col items-center text-center animate-rise">
+        <h1 className="text-2xl font-extrabold leading-tight max-w-xs">Study your own unit PDFs, the smart way</h1>
+        <p className="mt-2 mb-8 text-sm text-muted max-w-xs">
+          For college and university students. Study Pal tests you first, teaches only the topics you missed in a style you pick, then shows your before-and-after score.
+        </p>
         <Link
           href="/add"
           aria-label="Add a course"
@@ -44,7 +48,7 @@ export default function Home() {
             <path d="M12 5v14M5 12h14" />
           </svg>
         </Link>
-        <p className="mt-6 text-lg font-semibold">No units added yet</p>
+        <p className="mt-6 text-lg font-semibold">Add your first unit</p>
         <p className="mt-1 text-sm text-muted max-w-xs">
           Tap the plus to add your course and the unit you&apos;re studying.
         </p>

@@ -5,6 +5,18 @@ status: approved
 
 # AI Study Pal (working title) — Technical Spec
 
+## What Changed During the Build
+This spec is the plan approved before coding. The app grew and changed while each slice was tried on a phone; every change is logged in `checklist.md > Revisions`. The built app differs from the plan here:
+- **AI provider: Groq, not Nemotron.** NVIDIA's free endpoint queued for 45–60 seconds even on tiny answers, so adding a unit timed out. The provider is now a setting (`AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL`, see `.env.example`), defaulting to Groq's `openai/gpt-oss-20b`, with `openai/gpt-oss-120b` as a fallback when the daily limit is reached (`lib/nvidia.ts`). Wherever this spec says Nemotron, read "the AI provider".
+- **Long PDFs read part by part.** About 15 pages per part; each part is one round of up to 5 topics (test → teach → test). "Read the next part" reads the next one (`lib/parts.ts`, `POST /api/units/<id>/read-next`).
+- **Diagrams are data the app draws.** AI-drawn SVG pictures were meaningless, so the AI returns one of four shapes (flow, cycle, compare, parts) that `lib/diagram.ts` checks and `components/Diagram.tsx` draws. Lessons teach the whole topic in 6–9 sections from the student's own pages, with numbered lists and copyable code windows where they help (`LessonText`, `CodeBlock`).
+- **Final test per round.** It unlocks once every lesson in the round's path has its check done, and covers all of the round's topics.
+- **Fix this topic** (`POST /api/lesson`, mode `fix`): for a topic under 70% on the final test, a second-pass lesson aimed at the final-test mistakes, ending in a 5-question retake. Retake scores are saved as attempts and shown on the before-and-after (`ScoreCompare`).
+- **Ask about this** (`POST /api/ask`, `AskBox`): a question on any lesson step, answered from the student's material in their style.
+- **Go deeper** (`POST /api/lesson`, mode `deeper`): 3–4 harder sections added after a lesson, saved.
+- **Courses menu and profile** (`Navbar`, `/profile`, `GET /api/profile`): courses and units in the menu; overall before-and-after, topics learned and today's focus sessions on the profile.
+- **Sample unit** (`/add?sample=1`, `public/sample/intro-to-machine-learning.pdf`) so anyone can try it without their own PDF.
+
 ## How This Works, In Plain Language
 Study Pal is a website that opens on a phone, like an app. It has three helpers behind it.
 
@@ -33,7 +45,7 @@ PRD ref: `prd.md > The Core Journey`.
 - **Next.js (App Router) with TypeScript** — one project for screens and server functions, deploys to Vercel with no setup. Docs: https://nextjs.org/docs
 - **Tailwind CSS** — quick calm styling, mobile first. Docs: https://tailwindcss.com/docs
 - **Supabase (Postgres) with `@supabase/supabase-js`** — the cloud database the learner chose. Docs: https://supabase.com/docs
-- **NVIDIA Nemotron through an OpenAI-compatible endpoint** — the learner's choice of free AI. Called with plain `fetch`, no extra library. Base URL `https://integrate.api.nvidia.com/v1`, key from https://build.nvidia.com. Third-party docs list model names (e.g. `nvidia/nemotron-3.5-lightning-30b-a3b`): https://docs.openclaw.ai/providers/nvidia.md
+- **An OpenAI-compatible AI provider: Groq (`openai/gpt-oss-20b`) as built; NVIDIA Nemotron was the original plan** (see What Changed During the Build). Nemotron was the learner's first choice of free AI. Called with plain `fetch`, no extra library. Base URL `https://integrate.api.nvidia.com/v1`, key from https://build.nvidia.com. Third-party docs list model names (e.g. `nvidia/nemotron-3.5-lightning-30b-a3b`): https://docs.openclaw.ai/providers/nvidia.md
 - **`pdfjs-dist` (Mozilla pdf.js)** — reads text from the PDF in the phone's browser. Docs: https://mozilla.github.io/pdf.js/
 - **Hosting: Vercel**. Docs: https://vercel.com/docs
 
